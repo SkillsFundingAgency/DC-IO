@@ -2,7 +2,7 @@
 
 namespace ESFA.DC.IO.Interfaces
 {
-    public interface IKeyValueStoreService
+    public interface IKeyValuePersistenceService
     {
         Task<bool> SaveAsync(string key, string value);
 

@@ -2,7 +2,7 @@
 
 namespace ESFA.DC.IO.Redis.Config
 {
-    public class RedisKeyValueStoreServiceConfig : IRedisKeyValueStoreServiceConfig
+    public class RedisKeyValuePersistenceServiceConfig : IRedisKeyValuePersistenceServiceConfig
     {
         public string ConnectionString { get; set; }
     }

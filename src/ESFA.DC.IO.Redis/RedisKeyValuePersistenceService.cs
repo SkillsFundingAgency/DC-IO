@@ -4,13 +4,13 @@ using ESFA.DC.IO.Redis.Config.Interfaces;
 
 namespace ESFA.DC.IO.Redis
 {
-    public class RedisKeyValueStoreService : IKeyValueStoreService
+    public class RedisKeyValuePersistenceService : IKeyValuePersistenceService
     {
-        private IRedisKeyValueStoreServiceConfig _keyValueStoreServiceConfig;
+        private readonly IRedisKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
-        public RedisKeyValueStoreService(IRedisKeyValueStoreServiceConfig keyValueStoreServiceConfig)
+        public RedisKeyValuePersistenceService(IRedisKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
-            _keyValueStoreServiceConfig = keyValueStoreServiceConfig;
+            _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
         }
 
         public Task<string> GetAsync(string key)
