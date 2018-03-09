@@ -18,12 +18,12 @@ namespace ESFA.DC.IO.Redis
             throw new System.NotImplementedException();
         }
 
-        public Task<bool> RemoveAsync(string key)
+        public Task RemoveAsync(string key)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<bool> SaveAsync(string key, string value)
+        public Task SaveAsync(string key, string value)
         {
             throw new System.NotImplementedException();
         }

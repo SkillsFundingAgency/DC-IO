@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.Interfaces", "ES
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.Redis", "ESFA.DC.IO.Redis\ESFA.DC.IO.Redis.csproj", "{B01EC7D3-2CF9-463C-8AE1-29053D01D06C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.FileSystem", "ESFA.DC.IO.FileSystem\ESFA.DC.IO.FileSystem.csproj", "{796E6EDB-C5BB-4639-8C96-CEEE0A50DD7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B01EC7D3-2CF9-463C-8AE1-29053D01D06C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B01EC7D3-2CF9-463C-8AE1-29053D01D06C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B01EC7D3-2CF9-463C-8AE1-29053D01D06C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{796E6EDB-C5BB-4639-8C96-CEEE0A50DD7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{796E6EDB-C5BB-4639-8C96-CEEE0A50DD7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{796E6EDB-C5BB-4639-8C96-CEEE0A50DD7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{796E6EDB-C5BB-4639-8C96-CEEE0A50DD7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
