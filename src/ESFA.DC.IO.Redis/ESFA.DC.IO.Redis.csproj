@@ -5,7 +5,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ESFA.DC.Logging" Version="0.1.0-beta0001" />
+    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ESFA.DC.IO.Interfaces\ESFA.DC.IO.Interfaces.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Utilities.v4.0">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2\Microsoft.Build.Utilities.v4.0.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
