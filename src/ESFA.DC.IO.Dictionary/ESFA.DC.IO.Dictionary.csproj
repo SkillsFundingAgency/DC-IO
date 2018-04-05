@@ -5,11 +5,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <CodeAnalysisRuleSet>ESFA.DC.IO.FileSystem.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>ESFA.DC.IO.Dictionary.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <CodeAnalysisRuleSet>ESFA.DC.IO.FileSystem.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>ESFA.DC.IO.Dictionary.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +19,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ESFA.DC.IO.Interfaces\ESFA.DC.IO.Interfaces.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ESFA.DC.Logging">
+      <HintPath>..\packages\ESFA.DC.Logging.0.1.1-beta0001\lib\netstandard2.0\ESFA.DC.Logging.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using ESFA.DC.IO.Interfaces;
 using ESFA.DC.IO.Redis.Config.Interfaces;
+using ESFA.DC.Logging;
 using ESFA.DC.Logging.Interfaces;
 using StackExchange.Redis;
 
@@ -9,57 +11,59 @@ namespace ESFA.DC.IO.Redis
 {
     public class RedisKeyValuePersistenceService : IKeyValuePersistenceService
     {
-        private readonly ILogger _logger;
         private readonly IRedisKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
-        private ConnectionMultiplexer connection = null;
+        private readonly ILogger _logger;
 
-        public RedisKeyValuePersistenceService(ILogger logger, IRedisKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
+        private ConnectionMultiplexer connection;
+
+        public RedisKeyValuePersistenceService(IRedisKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
         {
-            _logger = logger;
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
+            _logger = logger;
         }
 
         public async Task<string> GetAsync(string key)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var db = await InitConnectionAsync();
-            var ret = await db.StringGetAsync(key);
-            if (ret.IsNullOrEmpty)
+            RedisValue ret;
+            using (new TimedLogger(_logger, "Redis Get"))
             {
-                return string.Empty;
+                IDatabase db = await InitConnectionAsync();
+                ret = await db.StringGetAsync(key);
+                if (ret.IsNullOrEmpty)
+                {
+                    return string.Empty;
+                }
             }
 
-            stopwatch.Stop();
-            _logger.LogDebug($"Redis Get: {stopwatch.ElapsedMilliseconds}");
             return ret.ToString();
         }
 
         public async Task RemoveAsync(string key)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var db = await InitConnectionAsync();
-            await db.KeyDeleteAsync(key);
-            stopwatch.Stop();
-            _logger.LogDebug($"Redis Delete: {stopwatch.ElapsedMilliseconds}");
+            using (new TimedLogger(_logger, "Redis Remove"))
+            {
+                IDatabase db = await InitConnectionAsync();
+                await db.KeyDeleteAsync(key);
+            }
         }
 
         public async Task SaveAsync(string key, string value)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var db = await InitConnectionAsync();
-            await db.StringSetAsync(key, value);
-            stopwatch.Stop();
-            _logger.LogDebug($"Redis Delete: {stopwatch.ElapsedMilliseconds}");
+            using (new TimedLogger(_logger, "Redis Set"))
+            {
+                IDatabase db = await InitConnectionAsync();
+                await db.StringSetAsync(key, value);
+            }
         }
 
         private async Task<IDatabase> InitConnectionAsync()
         {
             if (connection == null)
             {
+                string[] tokens = _keyValuePersistenceServiceConfig.ConnectionString.Split(',');
+                ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(new Uri(tokens[0]));
+                tableServicePoint.ConnectionLimit = 1000;
                 connection = await ConnectionMultiplexer.ConnectAsync(_keyValuePersistenceServiceConfig.ConnectionString);
             }
 
