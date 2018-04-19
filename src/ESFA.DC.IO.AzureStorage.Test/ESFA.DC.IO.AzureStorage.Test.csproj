@@ -98,15 +98,8 @@
     <Reference Include="xunit.execution.desktop, Version=2.3.1.3858, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <HintPath>..\packages\xunit.extensibility.execution.2.3.1\lib\net452\xunit.execution.desktop.dll</HintPath>
     </Reference>
-    <Reference Include="xunit.performance.core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=67066efe964d3b03, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.DotNet.xunit.performance.1.0.0-alpha-build0048\lib\net46\xunit.performance.core.dll</HintPath>
-    </Reference>
-    <Reference Include="xunit.performance.execution, Version=1.0.0.0, Culture=neutral, PublicKeyToken=67066efe964d3b03, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.DotNet.xunit.performance.1.0.0-alpha-build0048\lib\net46\xunit.performance.execution.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PerformanceTestAzureStorage.cs" />
     <Compile Include="TestFixture.cs" />
     <Compile Include="UnitTestAzureStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
