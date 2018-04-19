@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.1.0</Version>
+    <Authors>DC</Authors>
+    <Company>ESFA</Company>
+    <Description>Implementations for performing IO on DC Platform.</Description>
+    <Copyright>Copyright 2018</Copyright>
+    <PackageLicenseUrl>https://github.com/SkillsFundingAgency/DC-IO/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/SkillsFundingAgency/DC-IO</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SkillsFundingAgency/DC-IO</RepositoryUrl>
+    <PackageTags>IO Data Database SQL Redis Azure Table Cosmos File Dictionary Model ESFA</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ESFA.DC.IO.AzureCosmos\ESFA.DC.IO.AzureCosmos.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ESFA.DC.IO.AzureStorage\ESFA.DC.IO.AzureStorage.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ESFA.DC.IO.AzureTableStorage\ESFA.DC.IO.AzureTableStorage.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ESFA.DC.IO.Dictionary\ESFA.DC.IO.Dictionary.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ESFA.DC.IO.FileSystem\ESFA.DC.IO.FileSystem.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ESFA.DC.IO.Redis\ESFA.DC.IO.Redis.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ESFA.DC.IO.SqlServer\ESFA.DC.IO.SqlServer.csproj" PrivateAssets="All" />
+  </ItemGroup>
+
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+    </ItemGroup>
+  </Target>
+</Project>
