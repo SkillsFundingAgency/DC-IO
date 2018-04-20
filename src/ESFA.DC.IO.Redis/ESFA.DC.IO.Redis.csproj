@@ -13,13 +13,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ESFA.DC.IO.Interfaces" Version="0.1.0-beta0001" />
     <PackageReference Include="ESFA.DC.Logging" Version="0.1.1-beta0001" />
     <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ESFA.DC.IO.Interfaces\ESFA.DC.IO.Interfaces.csproj" />
   </ItemGroup>
 
   <ItemGroup>
