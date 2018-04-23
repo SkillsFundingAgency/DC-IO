@@ -22,6 +22,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.SqlServer.Test", "ESFA.DC.IO.SqlServer.Test\ESFA.DC.IO.SqlServer.Test.csproj", "{BB0B6905-8C0E-4B94-A1B2-44F1F61D1115}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{913E6D69-11B3-4A2F-8CF5-B42BE7325112}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.PerformanceTestHarness", "ESFA.DC.IO.PerformanceTestHarness\ESFA.DC.IO.PerformanceTestHarness.csproj", "{306DC1AF-2053-49F7-970C-DE95F297087A}"
 EndProject
@@ -37,7 +40,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESFA.DC.IO.AzureCosmos", "E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.AzureCosmos.Test", "ESFA.DC.IO.AzureCosmos.Test\ESFA.DC.IO.AzureCosmos.Test.csproj", "{769AEB93-5580-475E-A648-243BA45D6BBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO", "ESFA.DC.IO\ESFA.DC.IO.csproj", "{0AFE4611-F83A-44C7-85E2-3185BFB4CA16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESFA.DC.IO", "ESFA.DC.IO\ESFA.DC.IO.csproj", "{0AFE4611-F83A-44C7-85E2-3185BFB4CA16}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "ESFA.DC.IO.SqlServer.Database", "ESFA.DC.IO.SqlServer.Database\ESFA.DC.IO.SqlServer.Database.sqlproj", "{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,6 +118,12 @@ Global
 		{0AFE4611-F83A-44C7-85E2-3185BFB4CA16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AFE4611-F83A-44C7-85E2-3185BFB4CA16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AFE4611-F83A-44C7-85E2-3185BFB4CA16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

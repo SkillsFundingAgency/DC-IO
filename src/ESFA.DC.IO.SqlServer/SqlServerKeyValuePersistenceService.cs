@@ -33,24 +33,18 @@ namespace ESFA.DC.IO.SqlServer
 
         public async Task SaveAsync(string key, string value)
         {
-            // _logger.LogWarning($"{key} Sql Set");
             using (new TimedLogger(_logger, "Sql Set"))
             {
                 SqlKey sqlKey = new SqlKey(key);
                 using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
                 {
                     await connection.ExecuteAsync(SqlSet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor, Value = value });
-                    //await connection.ExecuteAsync(
-                    //    "[dbo].[usp_Set_DataExchangeJobValues]",
-                    //    new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor, Value = value },
-                    //    commandType: CommandType.StoredProcedure);
                 }
             }
         }
 
         public async Task<string> GetAsync(string key)
         {
-            // _logger.LogWarning($"{key} Sql Get");
             using (new TimedLogger(_logger, "Sql Get"))
             {
                 SqlKey sqlKey = new SqlKey(key);
@@ -58,10 +52,6 @@ namespace ESFA.DC.IO.SqlServer
                     new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
                 {
                     return (await connection.QueryAsync<DataExchange>(SqlGet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor })).Single().Value;
-                    //return (await connection.QueryAsync<DataExchange>(
-                    //    "[dbo].[usp_Get_DataExchangeKeyValue]",
-                    //    new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor },
-                    //    commandType: CommandType.StoredProcedure)).Single().Value;
                 }
             }
         }
@@ -74,10 +64,6 @@ namespace ESFA.DC.IO.SqlServer
                 using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
                 {
                     await connection.ExecuteAsync(SqlRemove, new { sqlKey.JobId, sqlKey.Item });
-                    //await connection.ExecuteAsync(
-                    //    "[dbo].[usp_Remove_DataExchangeJobValue]",
-                    //    new { sqlKey.JobId, sqlKey.Item },
-                    //    commandType: CommandType.StoredProcedure);
                 }
             }
         }

@@ -13,7 +13,7 @@ using Microsoft.Azure.Documents.Client;
 
 namespace ESFA.DC.IO.AzureCosmos
 {
-    public class AzureCosmosKeyValuePersistenceService : IKeyValuePersistenceService, IDisposable
+    public sealed class AzureCosmosKeyValuePersistenceService : IKeyValuePersistenceService, IDisposable
     {
         private const string DatabaseName = "Persistence";
 
@@ -26,6 +26,7 @@ namespace ESFA.DC.IO.AzureCosmos
         private DocumentClient _client;
 
         private Dictionary<string, Uri> _uriCache;
+
         private Uri _uriDocumentCollection;
 
         public AzureCosmosKeyValuePersistenceService(IAzureCosmosKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
@@ -51,10 +52,7 @@ namespace ESFA.DC.IO.AzureCosmos
                 await InitConnection();
                 IQueryable<DataExchange> query = _client.CreateDocumentQuery<DataExchange>(
                     _uriDocumentCollection,
-                    new SqlQuerySpec(
-                        "Select * From PersistenceCollection pc Where pc.id = @id",
-                        new SqlParameterCollection { new SqlParameter("@id", key) }));
-                    //.Where(k => k.Id == key);
+                    new SqlQuerySpec("Select * From PersistenceCollection pc Where pc.id = @id", new SqlParameterCollection { new SqlParameter("@id", key) }));
                 return query.AsEnumerable().Single().Value;
             }
         }
