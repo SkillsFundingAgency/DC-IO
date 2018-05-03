@@ -3,8 +3,6 @@ using System.Net;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureStorage.Config.Interfaces;
 using ESFA.DC.IO.Interfaces;
-using ESFA.DC.Logging;
-using ESFA.DC.Logging.Interfaces;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
@@ -14,57 +12,49 @@ namespace ESFA.DC.IO.AzureStorage
     {
         private readonly IAzureStorageKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
-        private readonly ILogger _logger;
-
         private CloudBlobContainer _cloudBlobContainer;
 
-        public AzureStorageKeyValuePersistenceService(IAzureStorageKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
+        public AzureStorageKeyValuePersistenceService(IAzureStorageKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
-            _logger = logger;
         }
 
         public async Task SaveAsync(string key, string value)
         {
-            using (new TimedLogger(_logger, "Storage Set"))
-            {
-                await InitConnectionAsync();
-                CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
-                await blob.UploadTextAsync(value);
-            }
+            await InitConnectionAsync();
+            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
+            await blob.UploadTextAsync(value);
         }
 
         public async Task<string> GetAsync(string key)
         {
-            string value;
-            using (new TimedLogger(_logger, "Storage Get"))
+            await InitConnectionAsync();
+            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
+            if (blob == null)
             {
-                await InitConnectionAsync();
-                CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
-                if (blob == null)
-                {
-                    throw new KeyNotFoundException($"Key '{key}' was not found in the Azure Storage");
-                }
-
-                value = await blob.DownloadTextAsync();
+                throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
 
-            return value;
+            return await blob.DownloadTextAsync();
         }
 
         public async Task RemoveAsync(string key)
         {
-            using (new TimedLogger(_logger, "Storage Remove"))
+            await InitConnectionAsync();
+            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
+            if (blob == null)
             {
-                await InitConnectionAsync();
-                CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
-                if (blob == null)
-                {
-                    throw new KeyNotFoundException($"Key '{key}' was not found in the Azure Storage");
-                }
-
-                await blob.DeleteAsync();
+                throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
+
+            await blob.DeleteAsync();
+        }
+
+        public async Task<bool> ContainsAsync(string key)
+        {
+            await InitConnectionAsync();
+            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
+            return blob != null;
         }
 
         private async Task InitConnectionAsync()

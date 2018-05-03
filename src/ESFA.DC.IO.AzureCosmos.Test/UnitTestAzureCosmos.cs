@@ -1,11 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureCosmos.Model;
-using ESFA.DC.Logging.Interfaces;
 using FluentAssertions;
-using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Moq;
 using Xunit;
 
 namespace ESFA.DC.IO.AzureCosmos.Test
@@ -24,9 +21,8 @@ namespace ESFA.DC.IO.AzureCosmos.Test
         {
             const string Key = "1_2_3_Set";
             const string Value = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
-            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync(Key, Value);
 
             IQueryable<DataExchange> query = _testFixture.Client.CreateDocumentQuery<DataExchange>(
@@ -41,15 +37,29 @@ namespace ESFA.DC.IO.AzureCosmos.Test
         {
             const string Key = "1_2_3_Get";
             const string Value = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             DataExchange dataExchange = new DataExchange(Key, Value);
             await _testFixture.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(TestFixture.DatabaseName, TestFixture.DocumentCollectionName), dataExchange);
 
-            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config);
             string ret = await service.GetAsync(Key);
 
             ret.Should().Be(Value);
+        }
+
+        [Fact]
+        public async Task TestContains()
+        {
+            const string Key = "1_2_3_Get";
+            const string Value = "Test Data";
+
+            DataExchange dataExchange = new DataExchange(Key, Value);
+            await _testFixture.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(TestFixture.DatabaseName, TestFixture.DocumentCollectionName), dataExchange);
+
+            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config);
+            bool ret = await service.ContainsAsync(Key);
+
+            ret.Should().Be(true);
         }
 
         [Fact]
@@ -57,12 +67,11 @@ namespace ESFA.DC.IO.AzureCosmos.Test
         {
             const string Key = "1_2_3_Remove";
             const string Value = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             DataExchange dataExchange = new DataExchange(Key, Value);
             await _testFixture.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(TestFixture.DatabaseName, TestFixture.DocumentCollectionName), dataExchange);
 
-            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new AzureCosmosKeyValuePersistenceService(_testFixture.Config);
             await service.RemoveAsync(Key);
 
             IQueryable<DataExchange> query = _testFixture.Client.CreateDocumentQuery<DataExchange>(

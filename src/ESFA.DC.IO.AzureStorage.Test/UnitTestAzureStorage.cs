@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
-using ESFA.DC.Logging.Interfaces;
 using FluentAssertions;
 using Microsoft.WindowsAzure.Storage.Blob;
-using Moq;
 using Xunit;
 
 namespace ESFA.DC.IO.AzureStorage.Test
@@ -21,9 +19,8 @@ namespace ESFA.DC.IO.AzureStorage.Test
         {
             const string Key = "1_2_3_Set";
             const string Value = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
-            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync(Key, Value);
 
             CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
@@ -36,12 +33,11 @@ namespace ESFA.DC.IO.AzureStorage.Test
         {
             const string Key = "1_2_3_Get";
             const string Value = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
             await blob.UploadTextAsync(Value);
 
-            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             string ret = await service.GetAsync(Key);
 
             ret.Should().Be(Value);
@@ -52,15 +48,29 @@ namespace ESFA.DC.IO.AzureStorage.Test
         {
             const string Key = "1_2_3_Remove";
             const string Value = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
             await blob.UploadTextAsync(Value);
 
-            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             await service.RemoveAsync(Key);
 
             blob.Exists().Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task TestContains()
+        {
+            const string Key = "1_2_3_Get";
+            const string Value = "Test Data";
+
+            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
+            await blob.UploadTextAsync(Value);
+
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
+            bool ret = await service.ContainsAsync(Key);
+
+            ret.Should().Be(true);
         }
     }
 }

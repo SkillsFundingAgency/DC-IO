@@ -33,8 +33,6 @@ namespace ESFA.DC.IO.PerformanceTestHarness
 
         private static Random random;
 
-        private static Logging.Interfaces.ILogger logger;
-
         private static List<GetSetRemove> azureStorage;
 
         private static List<GetSetRemove> fileSystem;
@@ -64,7 +62,6 @@ namespace ESFA.DC.IO.PerformanceTestHarness
         public static void Main(string[] args)
         {
             random = new Random();
-            var loggerMock = new Mock<Logging.Interfaces.ILogger>();
             //logger = new SeriLogger(new ApplicationLoggerSettings
             //{
             //    ApplicationLoggerOutputSettingsCollection = new List<IApplicationLoggerOutputSettings>()
@@ -77,10 +74,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             //}, new ExecutionContext
             //{
             //    JobId = "A", TaskKey = "B "
-
             //});
-            logger = loggerMock.Object;
-
             data = GetRandomString(StringLength);
 
             azureStorage = new List<GetSetRemove>();
@@ -107,29 +101,29 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             string primaryKey = ConfigurationManager.AppSettings["PrimaryKeyAzureCosmos"];
             azureCosmosConfig.SetupGet(x => x.EndpointUrl).Returns(uri);
             azureCosmosConfig.SetupGet(x => x.AuthKeyOrResourceToken).Returns(primaryKey);
-            azureCosmosUnitTest = new AzureCosmosKeyValuePersistenceService(azureCosmosConfig.Object, logger);
+            azureCosmosUnitTest = new AzureCosmosKeyValuePersistenceService(azureCosmosConfig.Object);
 
             var azureTableStorageConfig = new Mock<IAzureTableStorageKeyValuePersistenceServiceConfig>();
             string azureTableStorageConnectionString = ConfigurationManager.AppSettings["ConnectionStringAzureTableStorage"];
             azureTableStorageConfig.SetupGet(x => x.ConnectionString).Returns(azureTableStorageConnectionString);
-            azureTableStorageUnitTest = new AzureTableStorageKeyValuePersistenceService(azureTableStorageConfig.Object, logger);
+            azureTableStorageUnitTest = new AzureTableStorageKeyValuePersistenceService(azureTableStorageConfig.Object);
 
             var sqlServerConfig = new Mock<ISqlServerKeyValuePersistenceServiceConfig>();
             sqlServerConfig.SetupGet(x => x.ConnectionString).Returns(ConfigurationManager.AppSettings["ConnectionStringSqlServer"]);
-            sqlServerUnitTest = new SqlServerKeyValuePersistenceService(sqlServerConfig.Object, logger);
+            sqlServerUnitTest = new SqlServerKeyValuePersistenceService(sqlServerConfig.Object);
 
             var redisConfig = new Mock<IRedisKeyValuePersistenceServiceConfig>();
             redisConfig.SetupGet(x => x.ConnectionString).Returns(ConfigurationManager.AppSettings["ConnectionStringRedis"]);
-            redisUnitTest = new RedisKeyValuePersistenceService(redisConfig.Object, logger);
+            redisUnitTest = new RedisKeyValuePersistenceService(redisConfig.Object);
 
             var fileSystemConfig = new Mock<IFileSystemKeyValuePersistenceServiceConfig>();
             fileSystemConfig.SetupGet(x => x.Directory).Returns(Directory.GetCurrentDirectory);
-            fileSystemUnitTest = new FileSystemKeyValuePersistenceService(fileSystemConfig.Object, logger);
+            fileSystemUnitTest = new FileSystemKeyValuePersistenceService(fileSystemConfig.Object);
 
             var azureStorageConfig = new Mock<IAzureStorageKeyValuePersistenceServiceConfig>();
             string azureStorageConnectionString = ConfigurationManager.AppSettings["ConnectionStringAzureStorage"];
             azureStorageConfig.SetupGet(x => x.ConnectionString).Returns(azureStorageConnectionString);
-            azureStorageUnitTest = new AzureStorageKeyValuePersistenceService(azureStorageConfig.Object, logger);
+            azureStorageUnitTest = new AzureStorageKeyValuePersistenceService(azureStorageConfig.Object);
 
             if (multi)
             {
@@ -141,7 +135,6 @@ namespace ESFA.DC.IO.PerformanceTestHarness
                     }
                     catch (Exception ex)
                     {
-                        // logger.LogError("Error!", ex);
                         loopState.Break();
                     }
                 });
@@ -297,7 +290,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness
         private static async Task TestDictionary(int i)
         {
             string Key = $"1_2_{i}";
-            var dictionaryUnitTest = new DictionaryKeyValuePersistenceService(logger);
+            var dictionaryUnitTest = new DictionaryKeyValuePersistenceService();
 
             GetSetRemove getSetRemove = new GetSetRemove();
             Stopwatch stopwatch = new Stopwatch();

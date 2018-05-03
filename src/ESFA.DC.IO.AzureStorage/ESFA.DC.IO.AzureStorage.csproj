@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <PackageReference Include="ESFA.DC.IO.Interfaces" Version="0.1.0-beta0001" />
-    <PackageReference Include="ESFA.DC.Logging" Version="0.1.1-beta0001" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

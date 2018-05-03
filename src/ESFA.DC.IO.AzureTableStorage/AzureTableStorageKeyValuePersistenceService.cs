@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using ESFA.DC.IO.AzureTableStorage.Config.Interfaces;
 using ESFA.DC.IO.AzureTableStorage.Model;
 using ESFA.DC.IO.Interfaces;
-using ESFA.DC.Logging;
-using ESFA.DC.Logging.Interfaces;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -15,62 +13,59 @@ namespace ESFA.DC.IO.AzureTableStorage
     {
         private readonly IAzureTableStorageKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
-        private readonly ILogger _logger;
-
         private CloudTable _cloudTableContainer;
 
-        public AzureTableStorageKeyValuePersistenceService(IAzureTableStorageKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
+        public AzureTableStorageKeyValuePersistenceService(IAzureTableStorageKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
-            _logger = logger;
         }
 
         public async Task SaveAsync(string key, string value)
         {
-            using (new TimedLogger(_logger, "Table Set"))
-            {
-                await InitConnectionAsync();
-                DataExchange dataExchange = new DataExchange(key, value);
-                TableOperation tableOperation = TableOperation.InsertOrReplace(dataExchange);
-                await _cloudTableContainer.ExecuteAsync(tableOperation);
-            }
+            await InitConnectionAsync();
+            DataExchange dataExchange = new DataExchange(key, value);
+            TableOperation tableOperation = TableOperation.InsertOrReplace(dataExchange);
+            await _cloudTableContainer.ExecuteAsync(tableOperation);
         }
 
         public async Task<string> GetAsync(string key)
         {
-            using (new TimedLogger(_logger, "Table Get"))
+            TableKey tableKey = new TableKey(key);
+            await InitConnectionAsync();
+            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>(tableKey.JobId.ToString(), key);
+            TableResult retrievedResult = await _cloudTableContainer.ExecuteAsync(retrieveOperation);
+            DataExchange deleteEntity = retrievedResult.Result as DataExchange;
+            if (deleteEntity == null)
             {
-                TableKey tableKey = new TableKey(key);
-                await InitConnectionAsync();
-                TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>(tableKey.JobId.ToString(), key);
-                TableResult retrievedResult = await _cloudTableContainer.ExecuteAsync(retrieveOperation);
-                DataExchange deleteEntity = retrievedResult.Result as DataExchange;
-                if (deleteEntity == null)
-                {
-                    throw new KeyNotFoundException($"Key '{key}' was not found in the Azure Table");
-                }
-
-                return deleteEntity.Value;
+                throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
+
+            return deleteEntity.Value;
         }
 
         public async Task RemoveAsync(string key)
         {
-            using (new TimedLogger(_logger, "Table Remove"))
+            TableKey tableKey = new TableKey(key);
+            await InitConnectionAsync();
+            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>(tableKey.JobId.ToString(), key);
+            TableResult retrievedResult = await _cloudTableContainer.ExecuteAsync(retrieveOperation);
+            DataExchange deleteEntity = retrievedResult.Result as DataExchange;
+            if (deleteEntity == null)
             {
-                TableKey tableKey = new TableKey(key);
-                await InitConnectionAsync();
-                TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>(tableKey.JobId.ToString(), key);
-                TableResult retrievedResult = await _cloudTableContainer.ExecuteAsync(retrieveOperation);
-                DataExchange deleteEntity = retrievedResult.Result as DataExchange;
-                if (deleteEntity == null)
-                {
-                    throw new KeyNotFoundException($"Key '{key}' was not found in the Azure Table");
-                }
-
-                TableOperation deleteOperation = TableOperation.Delete(deleteEntity);
-                await _cloudTableContainer.ExecuteAsync(deleteOperation);
+                throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
+
+            TableOperation deleteOperation = TableOperation.Delete(deleteEntity);
+            await _cloudTableContainer.ExecuteAsync(deleteOperation);
+        }
+
+        public async Task<bool> ContainsAsync(string key)
+        {
+            TableKey tableKey = new TableKey(key);
+            await InitConnectionAsync();
+            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>(tableKey.JobId.ToString(), key);
+            TableResult retrievedResult = await _cloudTableContainer.ExecuteAsync(retrieveOperation);
+            return retrievedResult.Result is DataExchange;
         }
 
         private async Task InitConnectionAsync()

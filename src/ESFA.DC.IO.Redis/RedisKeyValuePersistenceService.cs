@@ -3,8 +3,6 @@ using System.Net;
 using System.Threading.Tasks;
 using ESFA.DC.IO.Interfaces;
 using ESFA.DC.IO.Redis.Config.Interfaces;
-using ESFA.DC.Logging;
-using ESFA.DC.Logging.Interfaces;
 using StackExchange.Redis;
 
 namespace ESFA.DC.IO.Redis
@@ -13,27 +11,20 @@ namespace ESFA.DC.IO.Redis
     {
         private readonly IRedisKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
-        private readonly ILogger _logger;
-
         private ConnectionMultiplexer connection;
 
-        public RedisKeyValuePersistenceService(IRedisKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
+        public RedisKeyValuePersistenceService(IRedisKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
-            _logger = logger;
         }
 
         public async Task<string> GetAsync(string key)
         {
-            RedisValue ret;
-            using (new TimedLogger(_logger, "Redis Get"))
+            IDatabase db = await InitConnectionAsync();
+            var ret = await db.StringGetAsync(key);
+            if (ret.IsNullOrEmpty)
             {
-                IDatabase db = await InitConnectionAsync();
-                ret = await db.StringGetAsync(key);
-                if (ret.IsNullOrEmpty)
-                {
-                    return string.Empty;
-                }
+                return string.Empty;
             }
 
             return ret.ToString();
@@ -41,20 +32,20 @@ namespace ESFA.DC.IO.Redis
 
         public async Task RemoveAsync(string key)
         {
-            using (new TimedLogger(_logger, "Redis Remove"))
-            {
-                IDatabase db = await InitConnectionAsync();
-                await db.KeyDeleteAsync(key);
-            }
+            IDatabase db = await InitConnectionAsync();
+            await db.KeyDeleteAsync(key);
         }
 
         public async Task SaveAsync(string key, string value)
         {
-            using (new TimedLogger(_logger, "Redis Set"))
-            {
-                IDatabase db = await InitConnectionAsync();
-                await db.StringSetAsync(key, value);
-            }
+            IDatabase db = await InitConnectionAsync();
+            await db.StringSetAsync(key, value);
+        }
+
+        public async Task<bool> ContainsAsync(string key)
+        {
+            IDatabase db = await InitConnectionAsync();
+            return db.KeyExists(key);
         }
 
         private async Task<IDatabase> InitConnectionAsync()

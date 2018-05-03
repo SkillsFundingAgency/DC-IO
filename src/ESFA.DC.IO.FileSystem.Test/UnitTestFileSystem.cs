@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using ESFA.DC.IO.FileSystem.Config.Interfaces;
-using ESFA.DC.Logging.Interfaces;
 using FluentAssertions;
 using Moq;
 using Xunit;
@@ -23,7 +22,7 @@ namespace ESFA.DC.IO.FileSystem.Test
             var configMock = new Mock<IFileSystemKeyValuePersistenceServiceConfig>();
             configMock.SetupGet(x => x.Directory).Returns(@"C:\SomePath\");
 
-            var service = new FileSystemKeyValuePersistenceService(configMock.Object, null);
+            var service = new FileSystemKeyValuePersistenceService(configMock.Object);
             service.GetFilename("1_2_3").Should().Be(@"C:\SomePath\1_2_3.dat");
         }
 
@@ -31,9 +30,8 @@ namespace ESFA.DC.IO.FileSystem.Test
         public async Task TestSet()
         {
             const string expectedFile = @"Storage\1_2_3.dat";
-            var loggerMock = new Mock<ILogger>();
 
-            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync("1_2_3", "Test Data");
 
             File.Exists(expectedFile).Should().BeTrue();
@@ -44,11 +42,10 @@ namespace ESFA.DC.IO.FileSystem.Test
         public async Task TestGet()
         {
             const string expectedFile = @"Storage\1_2_3.dat";
-            var loggerMock = new Mock<ILogger>();
 
             File.WriteAllText(expectedFile, "Test Data");
 
-            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config);
             string ret = await service.GetAsync("1_2_3");
 
             ret.Should().Be("Test Data");
@@ -58,14 +55,26 @@ namespace ESFA.DC.IO.FileSystem.Test
         public async Task TestRemove()
         {
             const string expectedFile = @"Storage\1_2_3.dat";
-            var loggerMock = new Mock<ILogger>();
 
             File.WriteAllText(expectedFile, "Test Data");
 
-            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config);
             await service.RemoveAsync("1_2_3");
 
             File.Exists(expectedFile).Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task TestContains()
+        {
+            const string expectedFile = @"Storage\1_2_3.dat";
+
+            File.WriteAllText(expectedFile, "Test Data");
+
+            var service = new FileSystemKeyValuePersistenceService(_testFixture.Config);
+            bool ret = await service.ContainsAsync("1_2_3");
+
+            ret.Should().Be(true);
         }
     }
 }

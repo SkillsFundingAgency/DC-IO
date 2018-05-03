@@ -1,48 +1,44 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using ESFA.DC.IO.FileSystem.Config.Interfaces;
 using ESFA.DC.IO.Interfaces;
-using ESFA.DC.Logging;
-using ESFA.DC.Logging.Interfaces;
 
 namespace ESFA.DC.IO.FileSystem
 {
     public class FileSystemKeyValuePersistenceService : IKeyValuePersistenceService
     {
         private readonly IFileSystemKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
-        private readonly ILogger _logger;
 
-        public FileSystemKeyValuePersistenceService(IFileSystemKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
+        public FileSystemKeyValuePersistenceService(IFileSystemKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
-            _logger = logger;
         }
 
         public async Task SaveAsync(string key, string value)
         {
-            using (new TimedLogger(_logger, "Filesystem Set"))
-            {
-                await Task.Run(() => File.WriteAllText(GetFilename(key), value));
-            }
+            await Task.Run(() => File.WriteAllText(GetFilename(key), value));
         }
 
         public async Task<string> GetAsync(string key)
         {
-            string ret;
-            using (new TimedLogger(_logger, "Filesystem Set"))
+            string filename = GetFilename(key);
+            if (!File.Exists(filename))
             {
-                ret = await Task.Run(() => File.ReadAllText(GetFilename(key)));
+                throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
 
-            return ret;
+            return File.ReadAllText(GetFilename(key));
         }
 
         public async Task RemoveAsync(string key)
         {
-            using (new TimedLogger(_logger, "Filesystem Remove"))
-            {
-                await Task.Run(() => File.Delete(GetFilename(key)));
-            }
+            File.Delete(GetFilename(key));
+        }
+
+        public async Task<bool> ContainsAsync(string key)
+        {
+            return File.Exists(GetFilename(key));
         }
 
         public string GetFilename(string key)

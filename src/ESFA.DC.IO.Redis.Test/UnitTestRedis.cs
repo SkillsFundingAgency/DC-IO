@@ -1,7 +1,5 @@
 ﻿using System.Threading.Tasks;
-using ESFA.DC.Logging.Interfaces;
 using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace ESFA.DC.IO.Redis.Test
@@ -20,9 +18,8 @@ namespace ESFA.DC.IO.Redis.Test
         {
             const string key = "1_2_3_Set";
             const string expectedValue = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
-            var service = new RedisKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new RedisKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync(key, expectedValue);
 
             _testFixture.Database.KeyExists(key).Should().BeTrue();
@@ -34,11 +31,10 @@ namespace ESFA.DC.IO.Redis.Test
         {
             const string key = "1_2_3_Set";
             const string expectedValue = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             _testFixture.Database.StringSet(key, expectedValue);
 
-            var service = new RedisKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new RedisKeyValuePersistenceService(_testFixture.Config);
             string ret = await service.GetAsync(key);
 
             ret.Should().Be(expectedValue);
@@ -49,14 +45,13 @@ namespace ESFA.DC.IO.Redis.Test
         {
             const string key = "1_2_3_Set";
             const string expectedValue = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             _testFixture.Database.StringSet(key, expectedValue);
 
-            var service = new RedisKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
-            await service.RemoveAsync(key);
+            var service = new RedisKeyValuePersistenceService(_testFixture.Config);
+            bool res = await service.ContainsAsync(key);
 
-            _testFixture.Database.KeyExists(key).Should().BeFalse();
+            res.Should().BeTrue();
         }
     }
 }

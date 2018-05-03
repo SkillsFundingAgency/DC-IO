@@ -9,5 +9,7 @@ namespace ESFA.DC.IO.Interfaces
         Task<string> GetAsync(string key);
 
         Task RemoveAsync(string key);
+
+        Task<bool> ContainsAsync(string key);
     }
 }

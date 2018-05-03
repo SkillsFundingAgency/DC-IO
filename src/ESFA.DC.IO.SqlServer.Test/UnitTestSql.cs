@@ -4,9 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ESFA.DC.IO.SqlServer.Model;
-using ESFA.DC.Logging.Interfaces;
 using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace ESFA.DC.IO.SqlServer.Test
@@ -25,9 +23,8 @@ namespace ESFA.DC.IO.SqlServer.Test
         {
             const string key = "1_2_1";
             const string expectedValue = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
-            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync(key, expectedValue);
 
             DataExchange de = (await _testFixture.Connection.QueryAsync<DataExchange>(
@@ -42,14 +39,13 @@ namespace ESFA.DC.IO.SqlServer.Test
         {
             const string key = "1_2_2";
             const string expectedValue = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             await _testFixture.Connection.ExecuteAsync(
                 "[dbo].[usp_Set_DataExchangeJobValues]",
                 new { JobId = 1, Item = 2, Actor = 2, Value = expectedValue },
                 commandType: CommandType.StoredProcedure);
 
-            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config);
             string ret = await service.GetAsync(key);
 
             ret.Should().Be(expectedValue);
@@ -60,14 +56,13 @@ namespace ESFA.DC.IO.SqlServer.Test
         {
             const string key = "1_2_3";
             const string expectedValue = "Test Data";
-            var loggerMock = new Mock<ILogger>();
 
             await _testFixture.Connection.ExecuteAsync(
                 "[dbo].[usp_Set_DataExchangeJobValues]",
                 new { JobId = 1, Item = 2, Actor = 3, Value = expectedValue },
                 commandType: CommandType.StoredProcedure);
 
-            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config, loggerMock.Object);
+            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config);
             await service.RemoveAsync(key);
 
             IEnumerable<DataExchange> de = await _testFixture.Connection.QueryAsync<DataExchange>(
@@ -75,6 +70,23 @@ namespace ESFA.DC.IO.SqlServer.Test
                 new {JobId = 1, Item = 2, Actor = 1},
                 commandType: CommandType.StoredProcedure);
             de.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task TestContains()
+        {
+            const string key = "1_2_2";
+            const string expectedValue = "Test Data";
+
+            await _testFixture.Connection.ExecuteAsync(
+                "[dbo].[usp_Set_DataExchangeJobValues]",
+                new { JobId = 1, Item = 2, Actor = 2, Value = expectedValue },
+                commandType: CommandType.StoredProcedure);
+
+            var service = new SqlServerKeyValuePersistenceService(_testFixture.Config);
+            bool ret = await service.ContainsAsync(key);
+
+            ret.Should().BeTrue();
         }
     }
 }

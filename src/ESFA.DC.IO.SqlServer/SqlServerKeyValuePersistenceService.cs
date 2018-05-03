@@ -1,19 +1,18 @@
-﻿using System.Data.SqlClient;
+﻿using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ESFA.DC.IO.Interfaces;
 using ESFA.DC.IO.SqlServer.Config.Interfaces;
 using ESFA.DC.IO.SqlServer.Model;
-using ESFA.DC.Logging;
-using ESFA.DC.Logging.Interfaces;
 
 namespace ESFA.DC.IO.SqlServer
 {
     public class SqlServerKeyValuePersistenceService : IKeyValuePersistenceService
     {
         private const string SqlSet =
-            "Merge [dbo].[DataExchange] as [Target] Using (Select @JobId as JobId, @Item as Item, @Actor as Actor) as [Source] on [Target].[Job_Id] = [Source].[JobId] And [Target].[Item] = [Source].[Item] And [Target].[ActorId] = [Source].[Actor] When Matched Then Update Set [Target].[Value] = @Value, [Modified_By] = SUSER_SNAME(), [Modified_On] = GETUTCDATE() When Not Matched Then Insert ([Job_Id], [Item], [ActorId], [Value], [Created_By], [Created_On], [Modified_By], [Modified_On]) Values (@JobId, @Item, @Actor, @Value, SUSER_SNAME(), GETUTCDATE(), SUSER_SNAME(), GETUTCDATE());";
+            "MERGE [dbo].[DataExchange] AS [Target] USING (Select @JobId AS JobId, @Item AS Item, @Actor AS Actor) AS [Source] ON [Target].[Job_Id] = [Source].[JobId] AND [Target].[Item] = [Source].[Item] AND [Target].[ActorId] = [Source].[Actor] WHEN MATCHED THEN UPDATE SET [Target].[Value] = @Value, [Modified_By] = SUSER_SNAME(), [Modified_On] = GETUTCDATE() WHEN NOT MATCHED THEN INSERT ([Job_Id], [Item], [ActorId], [Value], [Created_By], [Created_On], [Modified_By], [Modified_On]) Values (@JobId, @Item, @Actor, @Value, SUSER_SNAME(), GETUTCDATE(), SUSER_SNAME(), GETUTCDATE());";
 
         private const string SqlGet =
             "SELECT [DataExchange_Id], [Job_Id], [Item], [ActorId], [Value] FROM [dbo].[DataExchange] WHERE [Job_Id] = @JobId AND [Item] = @Item AND (@Actor IS NULL OR [ActorId] = @Actor);";
@@ -21,50 +20,56 @@ namespace ESFA.DC.IO.SqlServer
         private const string SqlRemove =
             "DELETE FROM [dbo].[DataExchange] WHERE [Job_Id] = @JobId AND [Item] = @Item;";
 
+        private const string SqlContains =
+            "IF EXISTS(SELECT 1 FROM [DataService].[dbo].[DataExchange] de WHERE de.Job_Id = @JobId AND de.Item = @Item AND de.ActorId = @Actor) SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)";
+
         private readonly ISqlServerKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
-        private readonly ILogger _logger;
-
-        public SqlServerKeyValuePersistenceService(ISqlServerKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig, ILogger logger)
+        public SqlServerKeyValuePersistenceService(ISqlServerKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
-            _logger = logger;
         }
 
         public async Task SaveAsync(string key, string value)
         {
-            using (new TimedLogger(_logger, "Sql Set"))
+            SqlKey sqlKey = new SqlKey(key);
+            using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
             {
-                SqlKey sqlKey = new SqlKey(key);
-                using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
-                {
-                    await connection.ExecuteAsync(SqlSet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor, Value = value });
-                }
+                await connection.ExecuteAsync(SqlSet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor, Value = value });
             }
         }
 
         public async Task<string> GetAsync(string key)
         {
-            using (new TimedLogger(_logger, "Sql Get"))
+            SqlKey sqlKey = new SqlKey(key);
+            using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
             {
-                SqlKey sqlKey = new SqlKey(key);
-                using (SqlConnection connection =
-                    new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
+                var res = (await connection.QueryAsync<DataExchange>(SqlGet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor })).ToArray();
+                if (res.Any())
                 {
-                    return (await connection.QueryAsync<DataExchange>(SqlGet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor })).Single().Value;
+                    throw new KeyNotFoundException($"Key '{key}' was not found in the store");
                 }
+
+                return res.Single().Value;
             }
         }
 
         public async Task RemoveAsync(string key)
         {
-            using (new TimedLogger(_logger, "Sql Remove"))
+            SqlKey sqlKey = new SqlKey(key);
+            using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
             {
-                SqlKey sqlKey = new SqlKey(key);
-                using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
-                {
-                    await connection.ExecuteAsync(SqlRemove, new { sqlKey.JobId, sqlKey.Item });
-                }
+                await connection.ExecuteAsync(SqlRemove, new { sqlKey.JobId, sqlKey.Item });
+            }
+        }
+
+        public async Task<bool> ContainsAsync(string key)
+        {
+            SqlKey sqlKey = new SqlKey(key);
+            using (SqlConnection connection =
+                new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
+            {
+                return (await connection.QueryAsync<bool>(SqlContains, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor })).Single();
             }
         }
     }
