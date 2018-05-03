@@ -36,6 +36,9 @@
     <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
+    <Reference Include="ESFA.DC.IO.Interfaces, Version=0.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ESFA.DC.IO.Interfaces.0.1.2-beta0001\lib\netstandard2.0\ESFA.DC.IO.Interfaces.dll</HintPath>
+    </Reference>
     <Reference Include="FluentAssertions, Version=5.3.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentAssertions.5.3.0\lib\net45\FluentAssertions.dll</HintPath>
     </Reference>
@@ -81,10 +84,6 @@
     <ProjectReference Include="..\ESFA.DC.IO.FileSystem\ESFA.DC.IO.FileSystem.csproj">
       <Project>{796E6EDB-C5BB-4639-8C96-CEEE0A50DD7C}</Project>
       <Name>ESFA.DC.IO.FileSystem</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ESFA.DC.IO.Interfaces\ESFA.DC.IO.Interfaces.csproj">
-      <Project>{4C76DBD3-8F26-4A2D-8127-7E479ADCB23A}</Project>
-      <Name>ESFA.DC.IO.Interfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

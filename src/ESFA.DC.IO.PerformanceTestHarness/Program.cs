@@ -27,7 +27,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness
     {
         private const int Runs = 250;
 
-        private const int StringLength = 1000;
+        private const int StringLength = 10000;
         
         private static string data;
 

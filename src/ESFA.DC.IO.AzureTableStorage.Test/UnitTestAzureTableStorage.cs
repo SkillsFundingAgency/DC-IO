@@ -24,7 +24,7 @@ namespace ESFA.DC.IO.AzureTableStorage.Test
             var service = new AzureTableStorageKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync(Key, Value);
 
-            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>("A", Key);
+            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>("1", Key);
             TableResult retrievedResult = await _testFixture.Container.ExecuteAsync(retrieveOperation);
             DataExchange deleteEntity = retrievedResult.Result as DataExchange;
             Assert.NotNull(deleteEntity);
@@ -60,7 +60,7 @@ namespace ESFA.DC.IO.AzureTableStorage.Test
             var service = new AzureTableStorageKeyValuePersistenceService(_testFixture.Config);
             await service.RemoveAsync(Key);
 
-            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>("A", Key);
+            TableOperation retrieveOperation = TableOperation.Retrieve<DataExchange>("1", Key);
             TableResult retrievedResult = await _testFixture.Container.ExecuteAsync(retrieveOperation);
             Assert.Null(retrievedResult.Result);
         }

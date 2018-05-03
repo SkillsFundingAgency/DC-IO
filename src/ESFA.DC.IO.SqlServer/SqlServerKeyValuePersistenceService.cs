@@ -44,8 +44,8 @@ namespace ESFA.DC.IO.SqlServer
             SqlKey sqlKey = new SqlKey(key);
             using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
             {
-                var res = (await connection.QueryAsync<DataExchange>(SqlGet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor })).ToArray();
-                if (res.Any())
+                DataExchange[] res = (await connection.QueryAsync<DataExchange>(SqlGet, new { sqlKey.JobId, sqlKey.Item, sqlKey.Actor })).ToArray();
+                if (!res.Any())
                 {
                     throw new KeyNotFoundException($"Key '{key}' was not found in the store");
                 }
