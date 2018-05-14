@@ -66,10 +66,26 @@ namespace ESFA.DC.IO.AzureStorage
 
             CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(_keyValuePersistenceServiceConfig.ConnectionString);
             CloudBlobClient cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-            _cloudBlobContainer = cloudBlobClient.GetContainerReference("persistence");
-            await _cloudBlobContainer.CreateIfNotExistsAsync();
+            await ConnectToContainer(cloudBlobClient);
+            UnlockConnectionLimit(cloudStorageAccount);
+        }
+
+        private void UnlockConnectionLimit(CloudStorageAccount cloudStorageAccount)
+        {
             ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(cloudStorageAccount.TableEndpoint);
             tableServicePoint.ConnectionLimit = 1000;
+        }
+
+        private async Task ConnectToContainer(CloudBlobClient cloudBlobClient)
+        {
+            string containerName = _keyValuePersistenceServiceConfig.ContainerName;
+            if (string.IsNullOrEmpty(containerName))
+            {
+                containerName = "persistence";
+            }
+
+            _cloudBlobContainer = cloudBlobClient.GetContainerReference(containerName);
+            await _cloudBlobContainer.CreateIfNotExistsAsync();
         }
     }
 }
