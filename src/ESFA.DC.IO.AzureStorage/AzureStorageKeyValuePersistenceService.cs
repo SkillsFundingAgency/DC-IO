@@ -29,32 +29,30 @@ namespace ESFA.DC.IO.AzureStorage
         public async Task<string> GetAsync(string key)
         {
             await InitConnectionAsync();
-            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
-            if (blob == null)
+            var blockReference = _cloudBlobContainer.GetBlockBlobReference(key);
+            var exists = await blockReference.ExistsAsync();
+            if (!exists)
             {
                 throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
 
-            return await blob.DownloadTextAsync();
+            return await blockReference.DownloadTextAsync();
         }
 
         public async Task RemoveAsync(string key)
         {
             await InitConnectionAsync();
-            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
-            if (blob == null)
+            var deleted = await _cloudBlobContainer.GetBlockBlobReference(key).DeleteIfExistsAsync();
+            if (!deleted)
             {
                 throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
-
-            await blob.DeleteAsync();
         }
 
         public async Task<bool> ContainsAsync(string key)
         {
             await InitConnectionAsync();
-            CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
-            return blob != null;
+            return await _cloudBlobContainer.GetBlockBlobReference(key).ExistsAsync();
         }
 
         private async Task InitConnectionAsync()

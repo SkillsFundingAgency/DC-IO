@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Xunit;
@@ -44,7 +45,7 @@ namespace ESFA.DC.IO.AzureStorage.Test
         }
 
         [Fact]
-        public async Task TestRemove()
+        public async Task TestRemove_Positive()
         {
             const string Key = "1_2_3_Remove";
             const string Value = "Test Data";
@@ -59,7 +60,17 @@ namespace ESFA.DC.IO.AzureStorage.Test
         }
 
         [Fact]
-        public async Task TestContains()
+        public async Task TestRemove_Negative()
+        {
+            const string Key = "1_2_3_Remove";
+
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.RemoveAsync(Key));
+        }
+
+
+        [Fact]
+        public async Task TestContains_Positive()
         {
             const string Key = "1_2_3_Get";
             const string Value = "Test Data";
@@ -71,6 +82,18 @@ namespace ESFA.DC.IO.AzureStorage.Test
             bool ret = await service.ContainsAsync(Key);
 
             ret.Should().Be(true);
+        }
+
+
+        [Fact]
+        public async Task TestContains_Negative()
+        {
+            const string Key = "XXX_YYYY_ZZ";
+
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
+            bool ret = await service.ContainsAsync(Key);
+
+            ret.Should().Be(false);
         }
     }
 }
