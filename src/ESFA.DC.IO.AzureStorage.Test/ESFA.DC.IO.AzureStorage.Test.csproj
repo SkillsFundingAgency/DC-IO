@@ -103,7 +103,7 @@
     </None>
     <None Include="packages.config" />
     <None Include="PrivateSettings.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
