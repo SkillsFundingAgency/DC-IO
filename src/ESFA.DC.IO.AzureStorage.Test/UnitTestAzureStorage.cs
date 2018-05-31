@@ -67,8 +67,7 @@ namespace ESFA.DC.IO.AzureStorage.Test
             var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.RemoveAsync(Key));
         }
-
-
+        
         [Fact]
         public async Task TestContains_Positive()
         {
@@ -83,12 +82,11 @@ namespace ESFA.DC.IO.AzureStorage.Test
 
             ret.Should().Be(true);
         }
-
-
+        
         [Fact]
         public async Task TestContains_Negative()
         {
-            const string Key = "XXX_YYYY_ZZ";
+            const string Key = "1_2_3_Negative";
 
             var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             bool ret = await service.ContainsAsync(Key);
