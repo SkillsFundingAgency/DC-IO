@@ -26,14 +26,39 @@ namespace ESFA.DC.IO.AzureStorage.Test
             CloudBlobClient cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
             Container = cloudBlobClient.GetContainerReference("persistence");
             Container.CreateIfNotExists();
+
+            Cleanup(null);
         }
 
         public void Dispose()
         {
-            IEnumerable<IListBlobItem> list = Container.ListBlobs();
-            foreach (IListBlobItem listBlobItem in list)
+            Cleanup(null);
+        }
+
+        private void Cleanup(IListBlobItem blobItem)
+        {
+            if (blobItem == null)
             {
-                ((CloudBlob)listBlobItem).Delete();
+                IEnumerable<IListBlobItem> list = Container.ListBlobs();
+                foreach (IListBlobItem listBlobItem in list)
+                {
+                    Cleanup(listBlobItem);
+                }
+
+                return;
+            }
+
+            if (blobItem is CloudBlobDirectory directory)
+            {
+                IEnumerable<IListBlobItem> list = directory.ListBlobs();
+                foreach (IListBlobItem listBlobItem in list)
+                {
+                    Cleanup(listBlobItem);
+                }
+            }
+            else
+            {
+                ((CloudBlockBlob)blobItem).Delete();
             }
         }
     }

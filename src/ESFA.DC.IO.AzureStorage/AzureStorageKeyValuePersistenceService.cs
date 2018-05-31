@@ -21,6 +21,7 @@ namespace ESFA.DC.IO.AzureStorage
 
         public async Task SaveAsync(string key, string value)
         {
+            key = BuildKey(key);
             await InitConnectionAsync();
             CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
             await blob.UploadTextAsync(value);
@@ -28,6 +29,7 @@ namespace ESFA.DC.IO.AzureStorage
 
         public async Task<string> GetAsync(string key)
         {
+            key = BuildKey(key);
             await InitConnectionAsync();
             CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
             if (blob == null)
@@ -40,6 +42,7 @@ namespace ESFA.DC.IO.AzureStorage
 
         public async Task RemoveAsync(string key)
         {
+            key = BuildKey(key);
             await InitConnectionAsync();
             CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
             if (blob == null)
@@ -52,9 +55,15 @@ namespace ESFA.DC.IO.AzureStorage
 
         public async Task<bool> ContainsAsync(string key)
         {
+            key = BuildKey(key);
             await InitConnectionAsync();
             CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
             return blob != null;
+        }
+
+        private static string BuildKey(string key)
+        {
+            return key.Replace('_', '/');
         }
 
         private async Task InitConnectionAsync()

@@ -23,7 +23,7 @@ namespace ESFA.DC.IO.AzureStorage.Test
             var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             await service.SaveAsync(Key, Value);
 
-            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
+            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(BuildKey(Key));
             blob.Exists().Should().BeTrue();
             (await blob.DownloadTextAsync()).Should().Be(Value);
         }
@@ -34,7 +34,7 @@ namespace ESFA.DC.IO.AzureStorage.Test
             const string Key = "1_2_3_Get";
             const string Value = "Test Data";
 
-            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
+            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(BuildKey(Key));
             await blob.UploadTextAsync(Value);
 
             var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
@@ -49,7 +49,7 @@ namespace ESFA.DC.IO.AzureStorage.Test
             const string Key = "1_2_3_Remove";
             const string Value = "Test Data";
 
-            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
+            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(BuildKey(Key));
             await blob.UploadTextAsync(Value);
 
             var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
@@ -64,13 +64,18 @@ namespace ESFA.DC.IO.AzureStorage.Test
             const string Key = "1_2_3_Get";
             const string Value = "Test Data";
 
-            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(Key);
+            CloudBlockBlob blob = _testFixture.Container.GetBlockBlobReference(BuildKey(Key));
             await blob.UploadTextAsync(Value);
 
             var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
             bool ret = await service.ContainsAsync(Key);
 
             ret.Should().Be(true);
+        }
+
+        private static string BuildKey(string key)
+        {
+            return key.Replace('_', '/');
         }
     }
 }
