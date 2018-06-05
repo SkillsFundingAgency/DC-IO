@@ -27,8 +27,6 @@ namespace ESFA.DC.IO.PerformanceTestHarness
     {
         private const int Runs = 250;
 
-        private const int StringLength = 10000;
-        
         private static string data;
 
         private static Random random;
@@ -58,6 +56,13 @@ namespace ESFA.DC.IO.PerformanceTestHarness
         private static FileSystemKeyValuePersistenceService fileSystemUnitTest;
 
         private static AzureStorageKeyValuePersistenceService azureStorageUnitTest;
+        private static bool _failedStorage;
+        private static bool _failedFileSystem;
+        private static bool _failedRedis;
+        private static bool _failedSql;
+        private static bool _failedDictionary;
+        private static bool _failedAzureTable;
+        private static bool _failedCosmos;
 
         public static void Main(string[] args)
         {
@@ -75,7 +80,9 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             //{
             //    JobId = "A", TaskKey = "B "
             //});
-            data = GetRandomString(StringLength);
+            // const int StringLength = 10000;
+            // data = GetRandomString(StringLength);
+            data = GetFileAsString(@"C:\Users\DevUser\source\repos\DC-ILR-1819-DataStore\src\ESFA.DC.ILR1819.DataStore.PersistData.Test\ALBOutput1000.json");
 
             azureStorage = new List<GetSetRemove>();
             fileSystem = new List<GetSetRemove>();
@@ -94,7 +101,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness
 
             bool multi = key.KeyChar == 'm';
 
-            Console.WriteLine($"Runs: {Runs}; String Length: {StringLength}; Multi: {multi}; Please wait...");
+            Console.WriteLine($"Runs: {Runs}; String Length: {data.Length}; Multi: {multi}; Please wait...");
 
             var azureCosmosConfig = new Mock<IAzureCosmosKeyValuePersistenceServiceConfig>();
             string uri = ConfigurationManager.AppSettings["UriAzureCosmos"];
@@ -143,19 +150,25 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             {
                 for (int i = 0; i < Runs; i++)
                 {
-                    RunTests(i).GetAwaiter().GetResult();
+                    try
+                    {
+                        RunTests(i).GetAwaiter().GetResult();
+                    }
+                    catch (Exception ex)
+                    {
+                    }
                 }
             }
 
             List<Result> results = new List<Result>
             {
-                new Result("Azure Storage", azureStorage),
-                new Result("File System", fileSystem),
-                new Result("Redis", redis),
-                new Result("SQL Server", sqlServer),
-                new Result("Dictionary", dictionary),
-                new Result("Azure Table", tableStorage),
-                new Result("Azure Cosmos", azureCosmos)
+                new Result("Azure Storage", azureStorage, _failedStorage),
+                new Result("File System", fileSystem, _failedFileSystem),
+                new Result("Redis", redis, _failedRedis),
+                new Result("SQL Server", sqlServer, _failedSql),
+                new Result("Dictionary", dictionary, _failedDictionary),
+                new Result("Azure Table", tableStorage, _failedAzureTable),
+                new Result("Azure Cosmos", azureCosmos, _failedCosmos)
             };
 
             results.Sort();
@@ -168,15 +181,98 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             Console.ReadKey();
         }
 
+        private static string GetFileAsString(string filename)
+        {
+            return File.ReadAllText(filename);
+        }
+
         private static async Task RunTests(int i)
         {
-            await TestAzureStorage(i);
-            await TestFileSystem(i);
-            await TestRedis(i);
-            await TestSqlServer(i);
-            await TestDictionary(i);
-            await TestAzureTable(i);
-            await TestAzureCosmos(i);
+            try
+            {
+                if (!_failedStorage)
+                {
+                    await TestAzureStorage(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                _failedStorage = true;
+            }
+
+            try
+            {
+                if (!_failedFileSystem)
+                {
+                    await TestFileSystem(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                _failedFileSystem = true;
+            }
+
+            try
+            {
+                if (!_failedRedis)
+                {
+                    await TestRedis(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                _failedRedis = true;
+            }
+
+            try
+            {
+                if (!_failedSql)
+                {
+                    await TestSqlServer(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                _failedSql = true;
+            }
+
+            try
+            {
+                if (!_failedDictionary)
+                {
+                    await TestDictionary(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                _failedDictionary = true;
+            }
+
+            try
+            {
+                if (!_failedAzureTable)
+                {
+                    await TestAzureTable(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                _failedAzureTable = true;
+            }
+
+            try
+            {
+                if (!_failedCosmos)
+                {
+                    await TestAzureCosmos(i);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                _failedCosmos = true;
+            }
         }
 
         private static async Task TestAzureCosmos(int i)

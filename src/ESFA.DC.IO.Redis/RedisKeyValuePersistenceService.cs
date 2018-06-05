@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ESFA.DC.IO.Interfaces;
 using ESFA.DC.IO.Redis.Config.Interfaces;
@@ -9,6 +10,8 @@ namespace ESFA.DC.IO.Redis
 {
     public class RedisKeyValuePersistenceService : IKeyValuePersistenceService
     {
+        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
+
         private readonly IRedisKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
         private ConnectionMultiplexer connection;
@@ -22,12 +25,7 @@ namespace ESFA.DC.IO.Redis
         {
             IDatabase db = await InitConnectionAsync();
             var ret = await db.StringGetAsync(key);
-            if (ret.IsNullOrEmpty)
-            {
-                return string.Empty;
-            }
-
-            return ret.ToString();
+            return ret.IsNullOrEmpty ? string.Empty : ret.ToString();
         }
 
         public async Task RemoveAsync(string key)
@@ -50,15 +48,24 @@ namespace ESFA.DC.IO.Redis
 
         private async Task<IDatabase> InitConnectionAsync()
         {
-            if (connection == null)
-            {
-                string[] tokens = _keyValuePersistenceServiceConfig.ConnectionString.Split(',');
-                ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(new Uri(tokens[0]));
-                tableServicePoint.ConnectionLimit = 1000;
-                connection = await ConnectionMultiplexer.ConnectAsync(_keyValuePersistenceServiceConfig.ConnectionString);
-            }
+            await _initLock.WaitAsync();
 
-            return connection.GetDatabase();
+            try
+            {
+                if (connection == null)
+                {
+                    string[] tokens = _keyValuePersistenceServiceConfig.ConnectionString.Split(',');
+                    ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(new Uri(tokens[0]));
+                    tableServicePoint.ConnectionLimit = 1000;
+                    connection = await ConnectionMultiplexer.ConnectAsync(_keyValuePersistenceServiceConfig.ConnectionString);
+                }
+
+                return connection.GetDatabase();
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
     }
 }

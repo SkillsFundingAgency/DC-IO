@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureTableStorage.Config.Interfaces;
 using ESFA.DC.IO.AzureTableStorage.Model;
@@ -12,6 +13,8 @@ namespace ESFA.DC.IO.AzureTableStorage
     public sealed class AzureTableStorageKeyValuePersistenceService : IKeyValuePersistenceService
     {
         private readonly IAzureTableStorageKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
+
+        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
 
         private CloudTable _cloudTableContainer;
 
@@ -70,17 +73,26 @@ namespace ESFA.DC.IO.AzureTableStorage
 
         private async Task InitConnectionAsync()
         {
-            if (_cloudTableContainer != null)
-            {
-                return;
-            }
+            await _initLock.WaitAsync();
 
-            CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(_keyValuePersistenceServiceConfig.ConnectionString);
-            CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
-            _cloudTableContainer = cloudTableClient.GetTableReference("persistence");
-            await _cloudTableContainer.CreateIfNotExistsAsync();
-            ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(cloudStorageAccount.TableEndpoint);
-            tableServicePoint.ConnectionLimit = 1000;
+            try
+            {
+                if (_cloudTableContainer != null)
+                {
+                    return;
+                }
+
+                CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(_keyValuePersistenceServiceConfig.ConnectionString);
+                CloudTableClient cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
+                _cloudTableContainer = cloudTableClient.GetTableReference("persistence");
+                await _cloudTableContainer.CreateIfNotExistsAsync();
+                ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(cloudStorageAccount.TableEndpoint);
+                tableServicePoint.ConnectionLimit = 1000;
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
     }
 }

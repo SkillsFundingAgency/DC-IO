@@ -10,6 +10,8 @@ namespace ESFA.DC.IO.PerformanceTestHarness.Model
 
         public IEnumerable<GetSetRemove> Results { get; }
 
+        public bool Failed { get; }
+
         public double Average { get; }
 
         public double AverageGet { get; }
@@ -26,17 +28,18 @@ namespace ESFA.DC.IO.PerformanceTestHarness.Model
 
         public long SumRemove { get; }
 
-        public Result(string name, List<GetSetRemove> results)
+        public Result(string name, List<GetSetRemove> results, bool failed)
         {
             Name = name;
             Results = results;
+            Failed = failed;
             SumGet = results.Sum(x => x.Get);
             SumSet = results.Sum(x => x.Set);
             SumRemove = results.Sum(x => x.Remove);
             Sum = SumSet + SumGet + SumRemove;
-            AverageGet = results.Average(x => x.Get);
-            AverageSet = results.Average(x => x.Set);
-            AverageRemove = results.Average(x => x.Remove);
+            AverageGet = results.Count == 0 ? 0 : results.Average(x => x.Get);
+            AverageSet = results.Count == 0 ? 0 : results.Average(x => x.Set);
+            AverageRemove = results.Count == 0 ? 0 : results.Average(x => x.Remove);
             Average = AverageSet + AverageGet + AverageRemove;
         }
 
@@ -57,7 +60,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness.Model
 
         public override string ToString()
         {
-            return $"{Name} - Sum: {Sum} [{SumSet},{SumGet},{SumRemove}]; Average: {Average} [{AverageSet},{AverageGet},{AverageRemove}]";
+            return $"{Name} - Failed: {Failed}, Sum: {Sum} [{SumSet},{SumGet},{SumRemove}]; Average: {Average} [{AverageSet},{AverageGet},{AverageRemove}]";
         }
     }
 }

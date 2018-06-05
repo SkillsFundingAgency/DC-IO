@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureStorage.Config.Interfaces;
 using ESFA.DC.IO.Interfaces;
@@ -11,6 +12,8 @@ namespace ESFA.DC.IO.AzureStorage
     public sealed class AzureStorageKeyValuePersistenceService : IKeyValuePersistenceService
     {
         private readonly IAzureStorageKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
+
+        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
 
         private CloudBlobContainer _cloudBlobContainer;
 
@@ -66,15 +69,24 @@ namespace ESFA.DC.IO.AzureStorage
 
         private async Task InitConnectionAsync()
         {
-            if (_cloudBlobContainer != null)
-            {
-                return;
-            }
+            await _initLock.WaitAsync();
 
-            CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(_keyValuePersistenceServiceConfig.ConnectionString);
-            CloudBlobClient cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-            await ConnectToContainer(cloudBlobClient);
-            UnlockConnectionLimit(cloudStorageAccount);
+            try
+            {
+                if (_cloudBlobContainer != null)
+                {
+                    return;
+                }
+
+                CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(_keyValuePersistenceServiceConfig.ConnectionString);
+                CloudBlobClient cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
+                await ConnectToContainer(cloudBlobClient);
+                UnlockConnectionLimit(cloudStorageAccount);
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
 
         private void UnlockConnectionLimit(CloudStorageAccount cloudStorageAccount)

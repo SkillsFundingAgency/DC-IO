@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureCosmos.Config.Interfaces;
 using ESFA.DC.IO.AzureCosmos.Model;
@@ -19,11 +20,13 @@ namespace ESFA.DC.IO.AzureCosmos
 
         private readonly IAzureCosmosKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
+        private readonly Dictionary<string, Uri> _uriCache = new Dictionary<string, Uri>();
+
+        private readonly Uri _uriDocumentCollection = UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName);
+
+        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
+
         private DocumentClient _client;
-
-        private Dictionary<string, Uri> _uriCache;
-
-        private Uri _uriDocumentCollection;
 
         public AzureCosmosKeyValuePersistenceService(IAzureCosmosKeyValuePersistenceServiceConfig keyValuePersistenceServiceConfig)
         {
@@ -72,22 +75,32 @@ namespace ESFA.DC.IO.AzureCosmos
 
         private async Task InitConnection()
         {
-            if (_client != null)
-            {
-                return;
-            }
+            await _initLock.WaitAsync();
 
-            ServicePoint tableServicePoint = ServicePointManager.FindServicePoint(new Uri(_keyValuePersistenceServiceConfig.EndpointUrl));
-            tableServicePoint.ConnectionLimit = 1000;
-            _client = new DocumentClient(
-                new Uri(_keyValuePersistenceServiceConfig.EndpointUrl),
-                _keyValuePersistenceServiceConfig.AuthKeyOrResourceToken,
-                new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp });
-            await _client.OpenAsync();
-            await _client.CreateDatabaseIfNotExistsAsync(new Database { Id = DatabaseName });
-            await _client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(DatabaseName), new DocumentCollection { Id = DocumentCollectionName });
-            _uriCache = new Dictionary<string, Uri>();
-            _uriDocumentCollection = UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName);
+            try
+            {
+                if (_client != null)
+                {
+                    return;
+                }
+
+                ServicePoint tableServicePoint =
+                    ServicePointManager.FindServicePoint(new Uri(_keyValuePersistenceServiceConfig.EndpointUrl));
+                tableServicePoint.ConnectionLimit = 1000;
+                _client = new DocumentClient(
+                    new Uri(_keyValuePersistenceServiceConfig.EndpointUrl),
+                    _keyValuePersistenceServiceConfig.AuthKeyOrResourceToken,
+                    new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp });
+                await _client.OpenAsync();
+                await _client.CreateDatabaseIfNotExistsAsync(new Database { Id = DatabaseName });
+                await _client.CreateDocumentCollectionIfNotExistsAsync(
+                    UriFactory.CreateDatabaseUri(DatabaseName),
+                    new DocumentCollection { Id = DocumentCollectionName });
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
 
         private Uri GetDocUri(string key)
