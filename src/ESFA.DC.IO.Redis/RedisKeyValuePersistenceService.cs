@@ -38,6 +38,7 @@ namespace ESFA.DC.IO.Redis
         {
             IDatabase db = await InitConnectionAsync();
             await db.StringSetAsync(key, value);
+            await db.KeyExpireAsync(key, _keyValuePersistenceServiceConfig.KeyExpiry ?? TimeSpan.FromDays(7));
         }
 
         public async Task<bool> ContainsAsync(string key)
