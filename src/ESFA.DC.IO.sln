@@ -42,6 +42,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.AzureCosmos.Test
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "ESFA.DC.IO.SqlServer.Database", "ESFA.DC.IO.SqlServer.Database\ESFA.DC.IO.SqlServer.Database.sqlproj", "{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ESFA.DC.IO.AzureStorage.Compressed", "ESFA.DC.IO.AzureStorage.Compressed\ESFA.DC.IO.AzureStorage.Compressed.csproj", "{628A1CC1-661B-4E6C-B9F6-13D7B2535ACB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ESFA.DC.IO.AzureStorage.Compressed.Test", "ESFA.DC.IO.AzureStorage.Compressed.Test\ESFA.DC.IO.AzureStorage.Compressed.Test.csproj", "{517E2A5F-2E6E-4607-BA8A-534D86B2668C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +122,14 @@ Global
 		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D6A7BDDE-5BC7-4A27-9B67-5D75EE884EC3}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{628A1CC1-661B-4E6C-B9F6-13D7B2535ACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{628A1CC1-661B-4E6C-B9F6-13D7B2535ACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{628A1CC1-661B-4E6C-B9F6-13D7B2535ACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{628A1CC1-661B-4E6C-B9F6-13D7B2535ACB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{517E2A5F-2E6E-4607-BA8A-534D86B2668C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{517E2A5F-2E6E-4607-BA8A-534D86B2668C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{517E2A5F-2E6E-4607-BA8A-534D86B2668C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{517E2A5F-2E6E-4607-BA8A-534D86B2668C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

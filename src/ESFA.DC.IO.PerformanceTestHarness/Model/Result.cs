@@ -28,6 +28,8 @@ namespace ESFA.DC.IO.PerformanceTestHarness.Model
 
         public long SumRemove { get; }
 
+        public float AverageCpu { get; set; }
+
         public Result(string name, List<GetSetRemove> results, bool failed)
         {
             Name = name;
@@ -41,6 +43,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness.Model
             AverageSet = results.Count == 0 ? 0 : results.Average(x => x.Set);
             AverageRemove = results.Count == 0 ? 0 : results.Average(x => x.Remove);
             Average = AverageSet + AverageGet + AverageRemove;
+            AverageCpu = results.Count == 0 ? 0 : results.Average(x => x.CpuCount);
         }
 
         public int CompareTo(Result other)
@@ -60,7 +63,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness.Model
 
         public override string ToString()
         {
-            return $"{Name} - Failed: {Failed}, Sum: {Sum} [{SumSet},{SumGet},{SumRemove}]; Average: {Average} [{AverageSet},{AverageGet},{AverageRemove}]";
+            return $"{Name} - Failed: {Failed}, Cpu: {AverageCpu}%, Sum: {Sum}ms [Set:{SumSet}ms,Get:{SumGet}ms,Remove:{SumRemove}ms]; Average: {Average}ms [Set:{AverageSet}ms,Get:{AverageGet}ms,Remove:{AverageRemove}ms]";
         }
     }
 }

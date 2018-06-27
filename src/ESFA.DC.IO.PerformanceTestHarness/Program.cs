@@ -4,10 +4,13 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureCosmos;
 using ESFA.DC.IO.AzureCosmos.Config.Interfaces;
 using ESFA.DC.IO.AzureStorage;
+using ESFA.DC.IO.AzureStorage.Compressed;
+using ESFA.DC.IO.AzureStorage.Compressed.Config.Interfaces;
 using ESFA.DC.IO.AzureStorage.Config.Interfaces;
 using ESFA.DC.IO.AzureTableStorage;
 using ESFA.DC.IO.AzureTableStorage.Config.Interfaces;
@@ -33,6 +36,8 @@ namespace ESFA.DC.IO.PerformanceTestHarness
 
         private static List<GetSetRemove> azureStorage;
 
+        private static List<GetSetRemove> azureStorageCompressed;
+
         private static List<GetSetRemove> fileSystem;
 
         private static List<GetSetRemove> redis;
@@ -56,13 +61,19 @@ namespace ESFA.DC.IO.PerformanceTestHarness
         private static FileSystemKeyValuePersistenceService fileSystemUnitTest;
 
         private static AzureStorageKeyValuePersistenceService azureStorageUnitTest;
+
+        private static AzureStorageCompressedKeyValuePersistenceService azureStorageCompressedUnitTest;
+
         private static bool _failedStorage;
+        private static bool _failedStorageCompressed;
         private static bool _failedFileSystem;
         private static bool _failedRedis;
         private static bool _failedSql;
         private static bool _failedDictionary;
         private static bool _failedAzureTable;
         private static bool _failedCosmos;
+
+        private static PerformanceCounter cpuCounter;
 
         public static void Main(string[] args)
         {
@@ -83,8 +94,11 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             // const int StringLength = 10000;
             // data = GetRandomString(StringLength);
             data = GetFileAsString(@"C:\Users\DevUser\source\repos\DC-ILR-1819-DataStore\src\ESFA.DC.ILR1819.DataStore.PersistData.Test\ALBOutput1000.json");
+            cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            cpuCounter.NextValue(); // Baseline
 
             azureStorage = new List<GetSetRemove>();
+            azureStorageCompressed = new List<GetSetRemove>();
             fileSystem = new List<GetSetRemove>();
             redis = new List<GetSetRemove>();
             sqlServer = new List<GetSetRemove>();
@@ -132,6 +146,12 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             azureStorageConfig.SetupGet(x => x.ConnectionString).Returns(azureStorageConnectionString);
             azureStorageUnitTest = new AzureStorageKeyValuePersistenceService(azureStorageConfig.Object);
 
+            var azureStorageCompressedConfig = new Mock<IAzureStorageCompressedKeyValuePersistenceServiceConfig>();
+            string azureStorageCompressedConnectionString = ConfigurationManager.AppSettings["ConnectionStringAzureStorage"];
+            azureStorageCompressedConfig.SetupGet(x => x.ConnectionString).Returns(azureStorageCompressedConnectionString);
+            azureStorageCompressedConfig.SetupGet(x => x.ValueEncoding).Returns(Encoding.UTF8);
+            azureStorageCompressedUnitTest = new AzureStorageCompressedKeyValuePersistenceService(azureStorageCompressedConfig.Object);
+
             if (multi)
             {
                 Parallel.For(0, Runs/*, new ParallelOptions() { MaxDegreeOfParallelism = 4 }*/, (i, loopState) =>
@@ -163,6 +183,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             List<Result> results = new List<Result>
             {
                 new Result("Azure Storage", azureStorage, _failedStorage),
+                new Result("Azure Storage Compressed", azureStorageCompressed, _failedStorageCompressed),
                 new Result("File System", fileSystem, _failedFileSystem),
                 new Result("Redis", redis, _failedRedis),
                 new Result("SQL Server", sqlServer, _failedSql),
@@ -202,83 +223,97 @@ namespace ESFA.DC.IO.PerformanceTestHarness
 
             try
             {
-                if (!_failedFileSystem)
+                if (!_failedStorageCompressed)
                 {
-                    await TestFileSystem(i);
-                }
-            }
-            catch (Exception ex)
-            {
-                _failedFileSystem = true;
-            }
-
-            try
-            {
-                if (!_failedRedis)
-                {
-                    await TestRedis(i);
-                }
-            }
-            catch (Exception ex)
-            {
-                _failedRedis = true;
-            }
-
-            try
-            {
-                if (!_failedSql)
-                {
-                    await TestSqlServer(i);
+                    await TestAzureStorageCompressed(i);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                _failedSql = true;
+                _failedStorageCompressed = true;
             }
 
-            try
-            {
-                if (!_failedDictionary)
-                {
-                    await TestDictionary(i);
-                }
-            }
-            catch (Exception ex)
-            {
-                _failedDictionary = true;
-            }
+            //try
+            //{
+            //    if (!_failedFileSystem)
+            //    {
+            //        await TestFileSystem(i);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _failedFileSystem = true;
+            //}
 
-            try
-            {
-                if (!_failedAzureTable)
-                {
-                    await TestAzureTable(i);
-                }
-            }
-            catch (Exception ex)
-            {
-                _failedAzureTable = true;
-            }
+            //try
+            //{
+            //    if (!_failedRedis)
+            //    {
+            //        await TestRedis(i);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _failedRedis = true;
+            //}
 
-            try
-            {
-                if (!_failedCosmos)
-                {
-                    await TestAzureCosmos(i);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                _failedCosmos = true;
-            }
+            //try
+            //{
+            //    if (!_failedSql)
+            //    {
+            //        await TestSqlServer(i);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine(ex.Message);
+            //    _failedSql = true;
+            //}
+
+            //try
+            //{
+            //    if (!_failedDictionary)
+            //    {
+            //        await TestDictionary(i);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _failedDictionary = true;
+            //}
+
+            //try
+            //{
+            //    if (!_failedAzureTable)
+            //    {
+            //        await TestAzureTable(i);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _failedAzureTable = true;
+            //}
+
+            //try
+            //{
+            //    if (!_failedCosmos)
+            //    {
+            //        await TestAzureCosmos(i);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine(ex.Message);
+            //    _failedCosmos = true;
+            //}
         }
 
         private static async Task TestAzureCosmos(int i)
         {
             string Key = $"1_2_{i}";
 
+            cpuCounter.NextValue();
             GetSetRemove getSetRemove = new GetSetRemove();
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -290,6 +325,7 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             stopwatch.Restart();
             await azureCosmosUnitTest.RemoveAsync(Key);
             getSetRemove.Remove = stopwatch.ElapsedMilliseconds;
+            getSetRemove.CpuCount = cpuCounter.NextValue();
             azureCosmos.Add(getSetRemove);
         }
 
@@ -368,7 +404,8 @@ namespace ESFA.DC.IO.PerformanceTestHarness
         private static async Task TestAzureStorage(int i)
         {
             string Key = $"1_2_{i}";
-            
+
+            cpuCounter.NextValue();
             GetSetRemove getSetRemove = new GetSetRemove();
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -380,7 +417,28 @@ namespace ESFA.DC.IO.PerformanceTestHarness
             stopwatch.Restart();
             await azureStorageUnitTest.RemoveAsync(Key);
             getSetRemove.Remove = stopwatch.ElapsedMilliseconds;
+            getSetRemove.CpuCount = cpuCounter.NextValue();
             azureStorage.Add(getSetRemove);
+        }
+
+        private static async Task TestAzureStorageCompressed(int i)
+        {
+            string Key = $"1_2_{i}";
+
+            cpuCounter.NextValue();
+            GetSetRemove getSetRemove = new GetSetRemove();
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            await azureStorageCompressedUnitTest.SaveAsync(Key, data);
+            getSetRemove.Set = stopwatch.ElapsedMilliseconds;
+            stopwatch.Restart();
+            await azureStorageCompressedUnitTest.GetAsync(Key);
+            getSetRemove.Get = stopwatch.ElapsedMilliseconds;
+            stopwatch.Restart();
+            await azureStorageCompressedUnitTest.RemoveAsync(Key);
+            getSetRemove.Remove = stopwatch.ElapsedMilliseconds;
+            getSetRemove.CpuCount = cpuCounter.NextValue();
+            azureStorageCompressed.Add(getSetRemove);
         }
 
         private static async Task TestDictionary(int i)

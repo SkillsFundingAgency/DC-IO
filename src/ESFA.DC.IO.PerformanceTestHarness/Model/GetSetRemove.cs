@@ -7,5 +7,7 @@
         public long Set { get; set; }
 
         public long Remove { get; set; }
+
+        public float CpuCount { get; set; }
     }
 }

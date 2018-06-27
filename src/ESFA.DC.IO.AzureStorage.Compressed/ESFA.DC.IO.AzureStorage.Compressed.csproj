@@ -5,26 +5,23 @@
     <Version>0.1.0</Version>
     <Authors>DC</Authors>
     <Company>ESFA</Company>
-    <Description>Implementation of the IO interface using Azure Storage</Description>
+    <Description>Implementation of the IO interface using compressed Azure Storage</Description>
     <Copyright>Copyright 2018</Copyright>
     <PackageLicenseUrl>https://github.com/SkillsFundingAgency/DC-IO/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageTags>IO Data Azure Storage ESFA</PackageTags>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageTags>IO Data Azure Storage ESFA Compressed</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <CodeAnalysisRuleSet>ESFA.DC.IO.AzureStorage.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>ESFA.DC.IO.AzureStorage.Compressed.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <CodeAnalysisRuleSet>ESFA.DC.IO.AzureStorage.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>ESFA.DC.IO.AzureStorage.Compressed.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="ESFA.DC.IO.Interfaces" Version="0.1.2-beta0001" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.2.0" />
   </ItemGroup>
 
