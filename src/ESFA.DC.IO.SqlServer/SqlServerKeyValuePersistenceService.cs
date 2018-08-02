@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using ESFA.DC.IO.Interfaces;
@@ -30,7 +31,7 @@ namespace ESFA.DC.IO.SqlServer
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
         }
 
-        public async Task SaveAsync(string key, string value)
+        public async Task SaveAsync(string key, string value, CancellationToken cancellationToken = default(CancellationToken))
         {
             SqlKey sqlKey = new SqlKey(key);
             using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
@@ -39,7 +40,7 @@ namespace ESFA.DC.IO.SqlServer
             }
         }
 
-        public async Task<string> GetAsync(string key)
+        public async Task<string> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             SqlKey sqlKey = new SqlKey(key);
             using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
@@ -54,7 +55,7 @@ namespace ESFA.DC.IO.SqlServer
             }
         }
 
-        public async Task RemoveAsync(string key)
+        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             SqlKey sqlKey = new SqlKey(key);
             using (SqlConnection connection = new SqlConnection(_keyValuePersistenceServiceConfig.ConnectionString))
@@ -63,7 +64,7 @@ namespace ESFA.DC.IO.SqlServer
             }
         }
 
-        public async Task<bool> ContainsAsync(string key)
+        public async Task<bool> ContainsAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             SqlKey sqlKey = new SqlKey(key);
             using (SqlConnection connection =

@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ESFA.DC.IO.Interfaces" Version="0.1.2-beta0001" />
+    <PackageReference Include="ESFA.DC.IO.Interfaces" Version="0.1.11-beta0001" />
     <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.22.0" />
     <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.9.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">

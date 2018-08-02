@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace ESFA.DC.IO.AzureStorage
 {
-    public sealed class AzureStorageKeyValuePersistenceService : IKeyValuePersistenceService
+    public sealed class AzureStorageKeyValuePersistenceService : IStreamableKeyValuePersistenceService
     {
         private readonly IAzureStorageKeyValuePersistenceServiceConfig _keyValuePersistenceServiceConfig;
 
@@ -23,51 +24,106 @@ namespace ESFA.DC.IO.AzureStorage
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
         }
 
-        public async Task SaveAsync(string key, string value)
+        public async Task SaveAsync(string key, string value, CancellationToken cancellationToken = default(CancellationToken))
         {
             key = BuildKey(key);
-            await InitConnectionAsync();
+            await InitConnectionAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
             blob.Metadata.Add("compressed", bool.FalseString);
-            await blob.UploadTextAsync(value);
+            await blob.UploadTextAsync(value, null, null, null, null, cancellationToken);
         }
 
-        public async Task<string> GetAsync(string key)
+        public async Task<string> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             key = BuildKey(key);
-            await InitConnectionAsync();
+            await InitConnectionAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             var blockReference = _cloudBlobContainer.GetBlockBlobReference(key);
-            var exists = await blockReference.ExistsAsync();
+            var exists = await blockReference.ExistsAsync(null, null, cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             if (!exists)
             {
                 throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
 
-            await blockReference.FetchAttributesAsync();
-            if (blockReference.Metadata.ContainsKey("compressed") && Convert.ToBoolean(blockReference.Metadata["compressed"]))
+            if (!await CheckAttributes(key, blockReference, cancellationToken))
             {
-                throw new KeyNotFoundException($"Key '{key}' contains compressed content");
+                return null;
             }
 
-            return await blockReference.DownloadTextAsync();
+            return await blockReference.DownloadTextAsync(null, null, null, null, cancellationToken);
         }
 
-        public async Task RemoveAsync(string key)
+        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             key = BuildKey(key);
-            await InitConnectionAsync();
-            var deleted = await _cloudBlobContainer.GetBlockBlobReference(key).DeleteIfExistsAsync();
+            await InitConnectionAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            var deleted = await _cloudBlobContainer.GetBlockBlobReference(key).DeleteIfExistsAsync(DeleteSnapshotsOption.None, null, null, null, cancellationToken);
             if (!deleted)
             {
                 throw new KeyNotFoundException($"Key '{key}' was not found in the store");
             }
         }
 
-        public async Task<bool> ContainsAsync(string key)
+        public async Task<bool> ContainsAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             key = BuildKey(key);
-            await InitConnectionAsync();
-            return await _cloudBlobContainer.GetBlockBlobReference(key).ExistsAsync();
+            await InitConnectionAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            return await _cloudBlobContainer.GetBlockBlobReference(key).ExistsAsync(null, null, cancellationToken);
+        }
+
+        public async Task SaveAsync(string key, Stream value, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            key = BuildKey(key);
+            await InitConnectionAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await _cloudBlobContainer.GetBlockBlobReference(key).UploadFromStreamAsync(value, null, null, null, cancellationToken);
+        }
+
+        public async Task GetAsync(string key, Stream value, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            key = BuildKey(key);
+            await InitConnectionAsync(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await _cloudBlobContainer.GetBlockBlobReference(key).DownloadToStreamAsync(value, null, null, null, cancellationToken);
         }
 
         private static string BuildKey(string key)
@@ -75,9 +131,9 @@ namespace ESFA.DC.IO.AzureStorage
             return key.Replace('_', '/');
         }
 
-        private async Task InitConnectionAsync()
+        private async Task InitConnectionAsync(CancellationToken cancellationToken)
         {
-            await _initLock.WaitAsync();
+            await _initLock.WaitAsync(cancellationToken);
 
             try
             {
@@ -86,9 +142,20 @@ namespace ESFA.DC.IO.AzureStorage
                     return;
                 }
 
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(_keyValuePersistenceServiceConfig.ConnectionString);
                 CloudBlobClient cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-                await ConnectToContainer(cloudBlobClient);
+                await ConnectToContainer(cloudBlobClient, cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 UnlockConnectionLimit(cloudStorageAccount);
             }
             finally
@@ -103,7 +170,7 @@ namespace ESFA.DC.IO.AzureStorage
             tableServicePoint.ConnectionLimit = 1000;
         }
 
-        private async Task ConnectToContainer(CloudBlobClient cloudBlobClient)
+        private async Task ConnectToContainer(CloudBlobClient cloudBlobClient, CancellationToken cancellationToken)
         {
             string containerName = _keyValuePersistenceServiceConfig.ContainerName;
             if (string.IsNullOrEmpty(containerName))
@@ -112,7 +179,24 @@ namespace ESFA.DC.IO.AzureStorage
             }
 
             _cloudBlobContainer = cloudBlobClient.GetContainerReference(containerName);
-            await _cloudBlobContainer.CreateIfNotExistsAsync();
+            await _cloudBlobContainer.CreateIfNotExistsAsync(BlobContainerPublicAccessType.Off, null, null, cancellationToken);
+        }
+
+        private async Task<bool> CheckAttributes(string key, CloudBlockBlob blockReference, CancellationToken cancellationToken)
+        {
+            await blockReference.FetchAttributesAsync(null, null, null, cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            if (blockReference.Metadata.ContainsKey("compressed") && Convert.ToBoolean(blockReference.Metadata["compressed"]))
+            {
+                throw new KeyNotFoundException($"Key '{key}' contains compressed content");
+            }
+
+            return true;
         }
     }
 }

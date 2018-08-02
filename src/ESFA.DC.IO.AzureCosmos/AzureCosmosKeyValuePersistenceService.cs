@@ -33,16 +33,28 @@ namespace ESFA.DC.IO.AzureCosmos
             _keyValuePersistenceServiceConfig = keyValuePersistenceServiceConfig;
         }
 
-        public async Task SaveAsync(string key, string value)
+        public async Task SaveAsync(string key, string value, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await InitConnection();
+            await InitConnection(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             DataExchange dataExchange = new DataExchange(key, value);
             await _client.UpsertDocumentAsync(_uriDocumentCollection, dataExchange);
         }
 
-        public async Task<string> GetAsync(string key)
+        public async Task<string> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await InitConnection();
+            await InitConnection(cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             IQueryable<DataExchange> query = _client.CreateDocumentQuery<DataExchange>(
                 _uriDocumentCollection,
                 new SqlQuerySpec("Select * From PersistenceCollection pc Where pc.id = @id", new SqlParameterCollection { new SqlParameter("@id", key) }));
@@ -55,15 +67,15 @@ namespace ESFA.DC.IO.AzureCosmos
             return enumerable.Single().Value;
         }
 
-        public async Task RemoveAsync(string key)
+        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await InitConnection();
+            await InitConnection(cancellationToken);
             await _client.DeleteDocumentAsync(GetDocUri(key));
         }
 
-        public async Task<bool> ContainsAsync(string key)
+        public async Task<bool> ContainsAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
-            await InitConnection();
+            await InitConnection(cancellationToken);
             IOrderedQueryable<Document> query = _client.CreateDocumentQuery(_uriDocumentCollection, new FeedOptions { MaxItemCount = 1 });
             return query.Where(x => x.Id == key).Select(x => x.Id).AsEnumerable().Any();
         }
@@ -73,13 +85,18 @@ namespace ESFA.DC.IO.AzureCosmos
             _client?.Dispose();
         }
 
-        private async Task InitConnection()
+        private async Task InitConnection(CancellationToken cancellationToken = default(CancellationToken))
         {
-            await _initLock.WaitAsync();
+            await _initLock.WaitAsync(cancellationToken);
 
             try
             {
                 if (_client != null)
+                {
+                    return;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
                 {
                     return;
                 }
@@ -91,7 +108,13 @@ namespace ESFA.DC.IO.AzureCosmos
                     new Uri(_keyValuePersistenceServiceConfig.EndpointUrl),
                     _keyValuePersistenceServiceConfig.AuthKeyOrResourceToken,
                     new ConnectionPolicy { ConnectionMode = ConnectionMode.Direct, ConnectionProtocol = Protocol.Tcp });
-                await _client.OpenAsync();
+                await _client.OpenAsync(cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 await _client.CreateDatabaseIfNotExistsAsync(new Database { Id = DatabaseName });
                 await _client.CreateDocumentCollectionIfNotExistsAsync(
                     UriFactory.CreateDatabaseUri(DatabaseName),

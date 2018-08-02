@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESFA.DC.IO.Interfaces;
 
@@ -17,12 +18,12 @@ namespace ESFA.DC.IO.Dictionary
             _dictionary = new ConcurrentDictionary<string, string>();
         }
 
-        public async Task SaveAsync(string key, string value)
+        public async Task SaveAsync(string key, string value, CancellationToken cancellationToken = default(CancellationToken))
         {
             _dictionary[key] = value;
         }
 
-        public async Task<string> GetAsync(string key)
+        public async Task<string> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (_dictionary.TryGetValue(key, out string value))
             {
@@ -32,7 +33,7 @@ namespace ESFA.DC.IO.Dictionary
             throw new KeyNotFoundException($"Key '{key}' was not found in the store");
         }
 
-        public async Task RemoveAsync(string key)
+        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (!_dictionary.TryRemove(key, out string _))
             {
@@ -40,7 +41,7 @@ namespace ESFA.DC.IO.Dictionary
             }
         }
 
-        public async Task<bool> ContainsAsync(string key)
+        public async Task<bool> ContainsAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
         {
             return _dictionary.ContainsKey(key);
         }
