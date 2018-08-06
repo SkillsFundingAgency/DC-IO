@@ -110,6 +110,7 @@ namespace ESFA.DC.IO.AzureStorage
                 return;
             }
 
+            value.Seek(0, SeekOrigin.Begin);
             await _cloudBlobContainer.GetBlockBlobReference(key).UploadFromStreamAsync(value, null, null, null, cancellationToken);
         }
 
@@ -123,6 +124,7 @@ namespace ESFA.DC.IO.AzureStorage
                 return;
             }
 
+            value.Seek(0, SeekOrigin.Begin);
             await _cloudBlobContainer.GetBlockBlobReference(key).DownloadToStreamAsync(value, null, null, null, cancellationToken);
         }
 

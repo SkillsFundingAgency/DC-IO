@@ -160,6 +160,7 @@ namespace ESFA.DC.IO.AzureStorage.Compressed
             {
                 using (GZipStream gZipStream = new GZipStream(memoryStream, _keyValuePersistenceServiceConfig.CompressionLevel))
                 {
+                    value.Seek(0, SeekOrigin.Begin);
                     await value.CopyToAsync(gZipStream, 81920, cancellationToken);
                 }
 
@@ -213,6 +214,7 @@ namespace ESFA.DC.IO.AzureStorage.Compressed
                     }
 
                     comp.Seek(0, SeekOrigin.Begin);
+                    value.Seek(0, SeekOrigin.Begin);
                     await gzip.CopyToAsync(value, 81920, cancellationToken);
                 }
             }
