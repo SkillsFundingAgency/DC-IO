@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -92,6 +94,26 @@ namespace ESFA.DC.IO.AzureStorage.Test
             bool ret = await service.ContainsAsync(Key);
 
             ret.Should().Be(false);
+        }
+
+        [Fact]
+        public async Task UploadBom()
+        {
+            const string Key = "1_2_3_Bom";
+
+            var service = new AzureStorageKeyValuePersistenceService(_testFixture.Config);
+
+            UTF8Encoding utF8Encoding = new UTF8Encoding(false, true);
+            string fileContentsDiskNoBom = File.ReadAllText("ILR-10033670-1819-20180906-152651-01.xml", utF8Encoding);
+
+            using (FileStream stream = File.Open("ILR-10033670-1819-20180906-152651-01.xml", FileMode.Open))
+            {
+                await service.SaveAsync(Key, stream);
+            }
+
+            string fileContentsAzureNoBom = await service.GetAsync(Key);
+
+            fileContentsAzureNoBom.Should().Be(fileContentsDiskNoBom);
         }
 
         private static string BuildKey(string key)
