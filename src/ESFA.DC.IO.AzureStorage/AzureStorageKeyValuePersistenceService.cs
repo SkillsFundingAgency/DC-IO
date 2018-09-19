@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESFA.DC.IO.AzureStorage.Config.Interfaces;
@@ -38,8 +37,7 @@ namespace ESFA.DC.IO.AzureStorage
             CloudBlockBlob blob = _cloudBlobContainer.GetBlockBlobReference(key);
             blob.Metadata.Add("compressed", bool.FalseString);
 
-            UTF8Encoding utF8Encoding = new UTF8Encoding(false, true);
-            await blob.UploadTextAsync(value, utF8Encoding, null, null, null, cancellationToken);
+            await blob.UploadTextAsync(value, null, null, null, null, cancellationToken);
         }
 
         public async Task<string> GetAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
@@ -70,8 +68,7 @@ namespace ESFA.DC.IO.AzureStorage
                 return null;
             }
 
-            UTF8Encoding utF8Encoding = new UTF8Encoding(false, true);
-            return await blockReference.DownloadTextAsync(utF8Encoding, null, null, null, cancellationToken);
+            return await blockReference.DownloadTextAsync(null, null, null, null, cancellationToken);
         }
 
         public async Task RemoveAsync(string key, CancellationToken cancellationToken = default(CancellationToken))
