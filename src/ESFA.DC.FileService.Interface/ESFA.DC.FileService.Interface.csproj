@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.1.0</Version>
+    <Authors>DC</Authors>
+    <Company>ESFADC</Company>
+    <PackageLicenseUrl>https://github.com/SkillsFundingAgency/DC-IO/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>Copyright 2018</Copyright>
+    <Description>File Service Interfaces</Description>
+    <PackageTags>IO Files Storage Azure</PackageTags>
+  </PropertyGroup>
+
+</Project>
