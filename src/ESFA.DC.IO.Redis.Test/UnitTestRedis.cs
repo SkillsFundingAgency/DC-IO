@@ -13,7 +13,7 @@ namespace ESFA.DC.IO.Redis.Test
             _testFixture = testFixture;
         }
 
-        [Fact]
+        [Fact(Skip = "Redis Deprecated")]
         public async Task TestSet()
         {
             const string key = "1_2_3_Set";
@@ -26,7 +26,7 @@ namespace ESFA.DC.IO.Redis.Test
             _testFixture.Database.StringGet(key).Should().Be(expectedValue);
         }
 
-        [Fact]
+        [Fact(Skip = "Redis Deprecated")]
         public async Task TestGet()
         {
             const string key = "1_2_3_Set";
@@ -40,7 +40,7 @@ namespace ESFA.DC.IO.Redis.Test
             ret.Should().Be(expectedValue);
         }
 
-        [Fact]
+        [Fact(Skip = "Redis Deprecated")]
         public async Task TestRemove()
         {
             const string key = "1_2_3_Set";
