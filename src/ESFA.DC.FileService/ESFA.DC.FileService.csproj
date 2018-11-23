@@ -13,11 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ESFA.DC.FileService.Interface" Version="0.1.15-beta0001" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ESFA.DC.FileService.Interface\ESFA.DC.FileService.Interface.csproj" />
   </ItemGroup>
 
 </Project>
