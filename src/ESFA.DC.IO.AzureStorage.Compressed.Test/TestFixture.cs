@@ -13,7 +13,7 @@ namespace ESFA.DC.IO.AzureStorage.Compressed.Test
     {
         public TestFixture()
         {
-            string connectionString = ConfigurationManager.AppSettings["ConnectionStringAzureTableStorage"];
+            string connectionString = "UseDevelopmentStorage=true";
 
             var mock = new Mock<IAzureStorageCompressedKeyValuePersistenceServiceConfig>();
             mock.SetupGet(x => x.ConnectionString).Returns(connectionString);
