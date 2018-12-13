@@ -12,13 +12,13 @@ namespace ESFA.DC.FileService
 {
     public class AzureStorageFileService : IFileService
     {
-        private readonly IAzureStorageFileServiceConfiguration azureStorageFileServiceConfig;
+        private readonly IAzureStorageFileServiceConfiguration _azureStorageFileServiceConfig;
 
         private readonly BlobRequestOptions _requestOptions = new BlobRequestOptions() { RetryPolicy = new LinearRetry(TimeSpan.FromSeconds(5), 3) };
 
-        public AzureStorageFileService(IAzureStorageFileServiceConfiguration _azureStorageFileServiceConfig)
+        public AzureStorageFileService(IAzureStorageFileServiceConfiguration azureStorageFileServiceConfig)
         {
-            azureStorageFileServiceConfig = _azureStorageFileServiceConfig;
+            _azureStorageFileServiceConfig = azureStorageFileServiceConfig;
         }
 
         public async Task<Stream> OpenReadStreamAsync(string fileReference, string container, CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ namespace ESFA.DC.FileService
         public async Task<Stream> OpenWriteStreamAsync(string fileReference, string container, CancellationToken cancellationToken)
         {
             var cloudBlockBlob = await GetCloudBlockBlob(fileReference, container, cancellationToken);
-
+            
             var stream = await cloudBlockBlob.OpenWriteAsync(
                 null,
                 _requestOptions,
@@ -49,10 +49,10 @@ namespace ESFA.DC.FileService
 
         private async Task<CloudBlockBlob> GetCloudBlockBlob(string fileReference, string container, CancellationToken cancellationToken)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(azureStorageFileServiceConfig.ConnectionString);
+            var cloudStorageAccount = CloudStorageAccount.Parse(_azureStorageFileServiceConfig.ConnectionString);
             var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
             var cloudBlobContainer = cloudBlobClient.GetContainerReference(container);
-
+            
             await cloudBlobContainer.CreateIfNotExistsAsync(BlobContainerPublicAccessType.Off, _requestOptions, null, cancellationToken);
             return cloudBlobContainer.GetBlockBlobReference(fileReference);
         }
