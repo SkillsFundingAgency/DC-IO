@@ -16,7 +16,12 @@ namespace ESFA.DC.IO.AzureStorage.Test
 
         public TestFixture()
         {
-            string connectionString = "UseDevelopmentStorage=true";// ConfigurationManager.AppSettings["ConnectionStringAzureTableStorage"];
+            var connectionStringKey = "ConnectionStringAzureTableStorage";
+            string configurationConnectionString = ConfigurationManager.AppSettings[connectionStringKey];
+
+            var connectionString = !configurationConnectionString.Contains(connectionStringKey)
+                ? configurationConnectionString
+                : "UseDevelopmentStorage=true";
 
             var mock = new Mock<IAzureStorageKeyValuePersistenceServiceConfig>();
             mock.SetupGet(x => x.ConnectionString).Returns(connectionString);
